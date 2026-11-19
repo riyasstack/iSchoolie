@@ -1,0 +1,652 @@
+rules_version = '2';
+
+/**
+ * iSchoolie — Firestore Security Rules
+ *
+ * Design rules:
+ *  1. Authorisation never comes from a UI boolean and never from a field the
+ *     user can write. Roles live in `userRoles/{uid}` (grants are Admin-SDK
+ *     only) and institution access lives in `institutions/{id}/members/{uid}`.
+ *  2. Privilege grants (institution approval, role grants, teacher
+ *     verification, account provisioning) are impossible from the client:
+ *     matching `allow` statements simply do not exist, and the Admin SDK CLI
+ *     bypasses rules entirely.
+ *  3. Grades are a separate collection from submissions so a student can write
+ *     their answer without ever being able to write a score.
+ *  4. `get()`/`exists()` inside rules are billed document reads. They are used
+ *     only where correctness requires a live lookup, and the cost is
+ *     documented in docs/CAPACITY.md.
+ */
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /* ------------------------------------------------------------------ */
+    /* Helpers                                                            */
+    /* ------------------------------------------------------------------ */
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function uid() {
+      return request.auth.uid;
+    }
+
+    function isSelf(id) {
+      return signedIn() && uid() == id;
+    }
+
+    function isPlatformAdmin() {
+      return signedIn()
+        && 'platformAdmin' in request.auth.token
+        && request.auth.token.platformAdmin == true;
+    }
+
+    function isSuspended() {
+      return signedIn()
+        && 'suspended' in request.auth.token
+        && request.auth.token.suspended == true;
+    }
+
+    function canAct() {
+      return signedIn() && !isSuspended();
+    }
+
+    function teacherVerified() {
+      return signedIn()
+        && 'teacherVerified' in request.auth.token
+        && request.auth.token.teacherVerified == true;
+    }
+
+    function emailMatches(email) {
+      return signedIn()
+        && email is string
+        && 'email' in request.auth.token
+        && request.auth.token.email == email;
+    }
+
+    function memberPath(instId, memberUid) {
+      return /databases/$(database)/documents/institutions/$(instId)/members/$(memberUid);
+    }
+
+    function isActiveMember(instId) {
+      return signedIn()
+        && exists(memberPath(instId, uid()))
+        && get(memberPath(instId, uid())).data.status == 'active';
+    }
+
+    function memberRole(instId) {
+      return get(memberPath(instId, uid())).data.role;
+    }
+
+    /** owner | admin may administer the institution workspace. */
+    function isInstAdmin(instId) {
+      return isActiveMember(instId) && memberRole(instId) in ['owner', 'admin'];
+    }
+
+    /** owner | admin | teacher may teach, grade and manage classes. */
+    function isInstTeacher(instId) {
+      return isActiveMember(instId) && memberRole(instId) in ['owner', 'admin', 'teacher'];
+    }
+
+    function institutionPath(instId) {
+      return /databases/$(database)/documents/institutions/$(instId);
+    }
+
+    /** Institutions must remain active; suspension removes access immediately. */
+    function institutionActive(instId) {
+      return exists(institutionPath(instId))
+        && get(institutionPath(instId)).data.status == 'active';
+    }
+
+    function classPath(instId, classId) {
+      return /databases/$(database)/documents/institutions/$(instId)/classes/$(classId);
+    }
+
+    function rosterPath(instId, classId, studentUid) {
+      return /databases/$(database)/documents/institutions/$(instId)/classes/$(classId)/roster/$(studentUid);
+    }
+
+    function isStudentInClass(instId, classId) {
+      return signedIn() && exists(rosterPath(instId, classId, uid()));
+    }
+
+    function assignmentPath(instId, classId, assignmentId) {
+      return /databases/$(database)/documents/institutions/$(instId)/classes/$(classId)/assignments/$(assignmentId);
+    }
+
+    function guardianLinkPath(guardianUid, studentUid) {
+      return /databases/$(database)/documents/guardianLinks/$(guardianUid + '_' + studentUid);
+    }
+
+    function approvedConsent(studentUid, category) {
+      return get(guardianLinkPath(uid(), studentUid)).data.consent[category] == true;
+    }
+
+    /** An approved guardian relationship, optionally for a data category. */
+    function isApprovedGuardianOf(studentUid) {
+      return signedIn()
+        && exists(guardianLinkPath(uid(), studentUid))
+        && get(guardianLinkPath(uid(), studentUid)).data.status == 'approved';
+    }
+
+    function isApprovedGuardianFor(studentUid, category) {
+      return isApprovedGuardianOf(studentUid) && approvedConsent(studentUid, category);
+    }
+
+    function communityPath(communityId) {
+      return /databases/$(database)/documents/communities/$(communityId);
+    }
+
+    function communityReadable(communityId) {
+      let data = get(communityPath(communityId)).data;
+      return data.visibility == 'public'
+        || (data.institutionId != null && isActiveMember(data.institutionId))
+        || isPlatformAdmin();
+    }
+
+    function communityMemberRef(communityId) {
+      return /databases/$(database)/documents/communities/$(communityId)/participants/$(uid());
+    }
+
+    function isCommunityMember(communityId) {
+      return signedIn() && exists(communityMemberRef(communityId));
+    }
+
+    /* ================================================================== */
+    /* 1. Users                                                            */
+    /* ================================================================== */
+
+    match /users/{userId} {
+      // Public-safe projection. Private data lives in the `private` subcollection.
+      // A minor's profile carries safeguarding.privateProfile == true and is
+      // therefore readable only by the owner and the platform team.
+      allow read: if signedIn()
+        && (isSelf(userId) || isPlatformAdmin() || resource.data.safeguarding.privateProfile == false);
+
+      allow create: if isSelf(userId)
+        && request.resource.data.uid == uid()
+        && request.resource.data.status == 'active'
+        && request.resource.data.onboarding.complete == false;
+
+      allow update: if isSelf(userId)
+        && request.resource.data.uid == resource.data.uid
+        // A user can never change their own account status.
+        && request.resource.data.status == resource.data.status
+        // Safeguarding flags are fixed after onboarding; only the very first
+        // onboarding write may set them (from the bootstrap defaults).
+        && (
+          resource.data.onboarding.complete == false
+          || (
+            request.resource.data.safeguarding.isMinor == resource.data.safeguarding.isMinor
+            && request.resource.data.safeguarding.privateProfile == resource.data.safeguarding.privateProfile
+            && request.resource.data.safeguarding.messagingEnabled == resource.data.safeguarding.messagingEnabled
+          )
+        );
+
+      // Suspension is an administrative action (CLI), never a self-service one.
+      allow update: if isPlatformAdmin()
+        && request.resource.data.uid == resource.data.uid;
+
+      allow delete: if false;
+
+      match /private/{docId} {
+        allow read: if isSelf(userId) || isPlatformAdmin();
+        allow create, update: if isSelf(userId);
+        allow delete: if false;
+      }
+
+      match /summaries/{docId} {
+        // Cache only. Never authoritative for permissions or grades.
+        allow read, write: if isSelf(userId);
+      }
+
+      match /notifications/{notificationId} {
+        allow read: if isSelf(userId) || isPlatformAdmin();
+        allow update: if isSelf(userId)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+        // Created by the admin CLI (service accounts bypass rules).
+        allow create, delete: if isPlatformAdmin();
+      }
+
+      match /roleRequests/{roleId} {
+        allow read: if isSelf(userId) || isPlatformAdmin();
+        allow create: if isSelf(userId)
+          && request.resource.data.role == roleId
+          && roleId in ['student_school', 'student_college', 'teacher', 'parent'];
+        allow update, delete: if false;
+      }
+    }
+
+    match /userRoles/{userId} {
+      allow read: if isSelf(userId) || isPlatformAdmin();
+
+      // A brand-new role document may only be created empty of privileges.
+      allow create: if isSelf(userId)
+        && request.resource.data.granted == []
+        && request.resource.data.revoked == []
+        && request.resource.data.teacherVerification.status == 'not_submitted'
+        && request.resource.data.selfDeclared is list
+        && request.resource.data.selfDeclared.hasOnly(['student_school', 'student_college', 'teacher', 'parent']);
+
+      // Self-service may only touch selfDeclared. Grants, revocations and
+      // verification are immutable from the browser.
+      allow update: if isSelf(userId)
+        && request.resource.data.granted == resource.data.granted
+        && request.resource.data.revoked == resource.data.revoked
+        && request.resource.data.teacherVerification == resource.data.teacherVerification
+        && request.resource.data.selfDeclared.hasOnly(['student_school', 'student_college', 'teacher', 'parent']);
+
+      allow create, update: if isPlatformAdmin()
+        && request.resource.data.teacherVerification.status != 'verified'
+        && request.resource.data.granted == resource.data.granted;
+
+      allow delete: if false;
+    }
+
+    /* ================================================================== */
+    /* 2. Institution applications                                         */
+    /* ================================================================== */
+
+    match /institutionApplications/{applicationId} {
+      allow read: if isSelf(applicationId) || isPlatformAdmin();
+
+      allow create: if isSelf(applicationId)
+        && request.resource.data.applicantUid == uid()
+        && request.resource.data.status in ['draft', 'submitted']
+        && request.resource.data.institutionId == null
+        && request.resource.data.reviewerUid == null;
+
+      // The applicant may edit an application that is not under review, and may
+      // only ever move it to draft/submitted. Approval is structurally denied,
+      // and the review record (who decided, and why) is not theirs to write.
+      allow update: if isSelf(applicationId)
+        && resource.data.applicantUid == uid()
+        && resource.data.status in ['draft', 'submitted', 'more_information_required', 'rejected']
+        && request.resource.data.status in ['draft', 'submitted']
+        && request.resource.data.institutionId == null
+        && request.resource.data.applicantUid == resource.data.applicantUid
+        && request.resource.data.reviewerUid == resource.data.reviewerUid
+        && request.resource.data.reviewNote == resource.data.reviewNote
+        && request.resource.data.createdAt == resource.data.createdAt;
+
+      // Review staff may pause, request information or reject. They may NOT
+      // approve: no rule permits status == 'approved' here.
+      allow update: if isPlatformAdmin()
+        && resource.data.applicantUid != uid()
+        && request.resource.data.status in ['submitted', 'under_review', 'more_information_required', 'rejected']
+        && request.resource.data.institutionId == null
+        && request.resource.data.applicantUid == resource.data.applicantUid;
+
+      allow delete: if false;
+
+      match /events/{eventId} {
+        allow read: if isSelf(applicationId) || isPlatformAdmin();
+        allow create: if (isSelf(applicationId)
+            && request.resource.data.actorUid == uid()
+            && request.resource.data.actorKind == 'applicant')
+          || (isPlatformAdmin()
+            && request.resource.data.actorUid == uid()
+            && request.resource.data.actorKind == 'platform_admin');
+        allow update, delete: if false;
+      }
+    }
+
+    /* ================================================================== */
+    /* 3. Institutions and membership                                      */
+    /* ================================================================== */
+
+    match /institutions/{instId} {
+      // Institutions are created by the admin CLI only (no create rule).
+      allow read: if isActiveMember(instId) || isPlatformAdmin();
+      allow update: if isPlatformAdmin()
+        && request.resource.data.ownerUid == resource.data.ownerUid;
+      allow delete: if false;
+
+      match /members/{memberUid} {
+        allow read: if isSelf(memberUid) || isPlatformAdmin() || isInstAdmin(instId);
+
+        // Institution staff may invite teachers/staff. Only the admin CLI can
+        // create an owner or admin, which is what prevents self-promotion.
+        allow create: if isInstAdmin(instId)
+          && request.resource.data.uid == memberUid
+          && request.resource.data.role in ['teacher', 'staff']
+          && request.resource.data.status == 'active';
+
+        allow update: if isInstAdmin(instId)
+          && memberUid != uid()
+          && request.resource.data.role in ['teacher', 'staff']
+          && request.resource.data.uid == resource.data.uid;
+
+        allow delete: if false;
+      }
+
+      match /classes/{classId} {
+        // Suspension removes access to academic content immediately, while the
+        // institution document itself stays readable so the UI can explain why.
+        allow read: if (isActiveMember(instId)
+          || isStudentInClass(instId, classId)
+          || isPlatformAdmin())
+          && (institutionActive(instId) || isPlatformAdmin());
+
+        allow create: if isInstTeacher(instId)
+          && institutionActive(instId)
+          && request.resource.data.teacherUid == uid()
+          && request.resource.data.institutionId == instId;
+
+        allow update: if institutionActive(instId)
+          && (isInstAdmin(instId)
+            || (isInstTeacher(instId) && resource.data.teacherUid == uid()
+              && request.resource.data.teacherUid == uid()));
+
+        allow delete: if false;
+
+        match /roster/{studentUid} {
+          allow read: if (isSelf(studentUid) || isInstTeacher(instId) || isPlatformAdmin())
+            && (institutionActive(instId) || isPlatformAdmin());
+
+          allow create: if institutionActive(instId)
+            && (
+              (isSelf(studentUid)
+                && request.resource.data.uid == uid()
+                && request.resource.data.role == 'student'
+                && get(classPath(instId, classId)).data.allowSelfEnroll == true)
+              || isInstTeacher(instId)
+            );
+
+          allow update: if false;
+          allow delete: if isSelf(studentUid) || isInstTeacher(instId);
+        }
+
+        match /assignments/{assignmentId} {
+          allow read: if (isInstTeacher(instId)
+            || ((isStudentInClass(instId, classId) || isActiveMember(instId)) && resource.data.status == 'published')
+            || isPlatformAdmin())
+            && (institutionActive(instId) || isPlatformAdmin());
+
+          allow create: if institutionActive(instId)
+            && isInstTeacher(instId)
+            && request.resource.data.createdBy == uid()
+            && request.resource.data.institutionId == instId
+            && request.resource.data.classId == classId;
+
+          allow update: if institutionActive(instId)
+            && isInstTeacher(instId)
+            && request.resource.data.createdBy == resource.data.createdBy;
+
+          allow delete: if isInstAdmin(instId);
+
+          match /submissions/{studentUid} {
+            allow read: if (isSelf(studentUid)
+              || isInstTeacher(instId)
+              || isPlatformAdmin()
+              || isApprovedGuardianFor(studentUid, 'academic'))
+              && (institutionActive(instId) || isPlatformAdmin());
+
+            allow create, update: if canAct()
+              && isSelf(studentUid)
+              && request.resource.data.studentUid == uid()
+              && request.resource.data.status == 'submitted'
+              && get(assignmentPath(instId, classId, assignmentId)).data.status == 'published';
+
+            allow delete: if false;
+          }
+
+          match /grades/{studentUid} {
+            // Published grades are visible to the student and to a guardian
+            // whose approved consent covers academics.
+            allow read: if (isInstTeacher(instId)
+              || isPlatformAdmin()
+              || (isSelf(studentUid) && resource.data.published == true)
+              || (isApprovedGuardianFor(studentUid, 'academic') && resource.data.published == true))
+              && (institutionActive(instId) || isPlatformAdmin());
+
+            // Only teaching staff can write a score. A student has no path to
+            // this document at all, which is the point of the separate collection.
+            allow create, update: if canAct()
+              && isInstTeacher(instId)
+              && request.resource.data.gradedBy == uid()
+              && request.resource.data.studentUid == studentUid;
+
+            allow delete: if false;
+          }
+        }
+
+        match /attendance/{recordId} {
+          allow read: if isInstTeacher(instId)
+            || isSelf(resource.data.studentUid)
+            || isApprovedGuardianFor(resource.data.studentUid, 'attendance')
+            || isPlatformAdmin();
+          allow create, update: if canAct() && isInstTeacher(instId);
+          allow delete: if isInstTeacher(instId);
+        }
+      }
+    }
+
+    // A join code is a bearer capability that only reveals where a class is.
+    // Roster writes are still authorised independently (allowSelfEnroll).
+    match /classCodes/{code} {
+      allow read: if signedIn();
+      allow create, update: if canAct()
+        && isInstTeacher(request.resource.data.institutionId)
+        && request.resource.data.code == code;
+      allow delete: if false;
+    }
+
+    /* ================================================================== */
+    /* 4. Guardian relationships                                           */
+    /* ================================================================== */
+
+    match /guardianLinkRequests/{requestId} {
+      allow read: if isSelf(resource.data.guardianUid)
+        || emailMatches(resource.data.studentEmail)
+        || isPlatformAdmin();
+
+      allow create: if canAct()
+        && request.resource.data.guardianUid == uid()
+        && request.resource.data.status == 'requested'
+        && request.resource.data.studentUid == null;
+
+      // Guardian cancels their own request.
+      allow update: if isSelf(resource.data.guardianUid)
+        && request.resource.data.status == 'rejected'
+        && request.resource.data.studentUid == resource.data.studentUid;
+
+      // The student claims the request with their own verified email.
+      allow update: if canAct()
+        && emailMatches(resource.data.studentEmail)
+        && resource.data.status == 'requested'
+        && request.resource.data.status == 'pending_verification'
+        && request.resource.data.studentUid == uid()
+        && request.resource.data.guardianUid == resource.data.guardianUid;
+
+      // Platform review approves or rejects after the student has confirmed.
+      allow update: if isPlatformAdmin()
+        && resource.data.status == 'pending_verification'
+        && request.resource.data.status in ['approved', 'rejected'];
+
+      allow delete: if false;
+    }
+
+    match /guardianLinks/{linkId} {
+      allow read: if isSelf(resource.data.guardianUid)
+        || isSelf(resource.data.studentUid)
+        || isPlatformAdmin();
+
+      // Created only by platform verification.
+      allow create: if isPlatformAdmin()
+        && linkId == request.resource.data.guardianUid + '_' + request.resource.data.studentUid
+        && request.resource.data.status in ['approved', 'pending_verification'];
+
+      // Either party may end the relationship; review may also update it.
+      allow update: if (
+          (isSelf(resource.data.guardianUid) || isSelf(resource.data.studentUid))
+          && request.resource.data.status == 'revoked'
+          && request.resource.data.revokedBy == uid()
+          && request.resource.data.studentUid == resource.data.studentUid
+          && request.resource.data.guardianUid == resource.data.guardianUid
+        )
+        || isPlatformAdmin();
+
+      allow delete: if false;
+    }
+
+    /* ================================================================== */
+    /* 5. Courses                                                          */
+    /* ================================================================== */
+
+    match /courses/{courseId} {
+      allow read: if signedIn()
+        && (resource.data.status == 'published'
+          || isSelf(resource.data.teacherUid)
+          || isPlatformAdmin());
+
+      // Publishing requires the iSchoolie-verified teacher claim, which only
+      // the admin CLI can mint.
+      allow create: if canAct()
+        && teacherVerified()
+        && request.resource.data.teacherUid == uid()
+        && request.resource.data.teacherVerified == true
+        && (request.resource.data.institutionId == null
+          || isInstTeacher(request.resource.data.institutionId));
+
+      allow update: if canAct()
+        && teacherVerified()
+        && resource.data.teacherUid == uid()
+        && request.resource.data.teacherUid == uid();
+
+      allow delete: if isInstAdmin(resource.data.institutionId) || isPlatformAdmin();
+
+      match /courseEnrollments/{studentUid} {
+        allow read: if isSelf(studentUid) || isSelf(get(/databases/$(database)/documents/courses/$(courseId)).data.teacherUid);
+        allow create: if canAct()
+          && isSelf(studentUid)
+          && request.resource.data.uid == uid()
+          && get(/databases/$(database)/documents/courses/$(courseId)).data.status == 'published';
+        allow update: if false;
+        allow delete: if isSelf(studentUid);
+      }
+    }
+
+    /* ================================================================== */
+    /* 6. Communities, posts and moderation                                */
+    /* ================================================================== */
+
+    match /communities/{communityId} {
+      allow read: if signedIn() && communityReadable(communityId);
+
+      allow create: if canAct()
+        && request.resource.data.createdBy == uid()
+        && (request.resource.data.visibility == 'public'
+          || isInstTeacher(request.resource.data.institutionId));
+
+      allow update: if isPlatformAdmin() || isInstAdmin(resource.data.institutionId);
+      allow delete: if isPlatformAdmin();
+
+      match /participants/{memberUid} {
+        allow read: if signedIn() && communityReadable(communityId);
+        allow create: if canAct()
+          && isSelf(memberUid)
+          && request.resource.data.uid == uid()
+          && resource == null;
+        allow update: if false;
+        allow delete: if isSelf(memberUid);
+      }
+
+      match /posts/{postId} {
+        allow read: if signedIn()
+          && communityReadable(communityId)
+          && resource.data.status != 'removed';
+
+        allow create: if canAct()
+          && communityReadable(communityId)
+          && isCommunityMember(communityId)
+          && request.resource.data.authorUid == uid()
+          && request.resource.data.status == 'visible';
+
+        // Authors may edit their own visible post; moderators may hide any post.
+        allow update: if (isSelf(resource.data.authorUid) && request.resource.data.authorUid == resource.data.authorUid)
+          || isPlatformAdmin()
+          || isInstAdmin(get(communityPath(communityId)).data.institutionId);
+
+        allow delete: if isPlatformAdmin();
+
+        match /comments/{commentId} {
+          allow read: if signedIn() && communityReadable(communityId);
+          allow create: if canAct()
+            && isCommunityMember(communityId)
+            && request.resource.data.authorUid == uid();
+          allow update: if isSelf(resource.data.authorUid);
+          allow delete: if isPlatformAdmin() || isSelf(resource.data.authorUid);
+        }
+      }
+    }
+
+    match /reports/{reportId} {
+      allow create: if canAct()
+        && request.resource.data.reporterUid == uid()
+        && request.resource.data.status == 'open';
+      allow read: if isSelf(resource.data.reporterUid) || isPlatformAdmin();
+      // Triage only. Moderation never grants roles or access.
+      allow update: if isPlatformAdmin()
+        && request.resource.data.reporterUid == resource.data.reporterUid;
+      allow delete: if false;
+    }
+
+    /* ================================================================== */
+    /* 7. Audit trail                                                      */
+    /* ================================================================== */
+
+    match /auditLogs/{logId} {
+      allow read: if isPlatformAdmin();
+      // Append-only. The admin CLI (service account) is the primary writer;
+      // a platform admin may append their own review entries.
+      allow create: if isPlatformAdmin()
+        && request.resource.data.actorUid == uid()
+        && request.resource.data.actorKind == 'platform_admin';
+      allow update, delete: if false;
+    }
+
+    /* ================================================================== */
+    /* 8. Collection-group reads                                           */
+    /* ================================================================== */
+
+    // The app reads "my memberships", "my classes", "my grades" and "my
+    // courses" with collection-group queries so it never has to know every
+    // institution and class id up front. Each rule pins the result to the
+    // caller's own documents: a query that is not filtered to the caller
+    // matches nothing and is denied by the catch-all below. Documents read
+    // individually keep their narrower path rules.
+
+    match /{path=**}/members/{memberUid} {
+      allow list: if signedIn() && resource.data.uid == uid();
+    }
+
+    match /{path=**}/roster/{studentUid} {
+      allow list: if signedIn() && resource.data.uid == uid();
+    }
+
+    match /{path=**}/classes/{classId} {
+      allow list: if signedIn() && resource.data.teacherUid == uid();
+    }
+
+    match /{path=**}/grades/{studentUid} {
+      allow list: if signedIn()
+        && resource.data.published == true
+        && (resource.data.studentUid == uid()
+          || isApprovedGuardianFor(resource.data.studentUid, 'academic'));
+    }
+
+    match /{path=**}/courseEnrollments/{studentUid} {
+      allow list: if signedIn() && resource.data.uid == uid();
+    }
+
+    /* ================================================================== */
+    /* 9. Everything else is closed by default                             */
+    /* ================================================================== */
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "projects": {
+    "default": "ischoolie",
+    "demo": "demo-ischoolie"
+  }
+}

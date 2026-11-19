@@ -1,0 +1,56 @@
+{
+  "name": "ischoolie",
+  "version": "0.1.0",
+  "private": true,
+  "description": "iSchoolie - Education Networking Platform. Learn. Teach. Connect. Grow.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "npx serve out -l 3000",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "emulators": "firebase emulators:start --only auth,firestore --project demo-ischoolie",
+    "emulators:local": "node scripts/dev/local-firebase.mjs",
+    "seed": "tsx --env-file=.env.local scripts/admin/seed-demo.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:rules": "node scripts/dev/local-firebase.mjs emulators:exec --only firestore,auth --project demo-ischoolie \"vitest run --config vitest.rules.config.ts\"",
+    "test:e2e": "playwright test",
+    "admin": "tsx scripts/admin/index.ts",
+    "deploy:rules": "firebase deploy --only firestore",
+    "deploy:hosting": "firebase deploy --only hosting",
+    "verify": "npm run typecheck && npm run test && npm run build"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^3.10.0",
+    "clsx": "^2.1.1",
+    "firebase": "^12.4.0",
+    "lucide-react": "^0.469.0",
+    "next": "^15.5.4",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "react-hook-form": "^7.54.2",
+    "tailwind-merge": "^2.6.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.2",
+    "@playwright/test": "^1.49.1",
+    "@types/node": "^22.10.5",
+    "@types/react": "^19.0.7",
+    "@types/react-dom": "^19.0.3",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^15.5.4",
+    "firebase-admin": "^13.0.2",
+    "firebase-tools": "^15.36.0",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}
