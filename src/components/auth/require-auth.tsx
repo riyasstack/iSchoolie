@@ -40,8 +40,10 @@ export function RequireAuth({
 
   React.useEffect(() => {
     if (status === 'signed-out') {
-      const next = encodeURIComponent(pathname || '/dashboard');
-      router.replace(`/login?next=${next}`);
+      const next = encodeURIComponent(pathname || '/feed');
+      // Full navigation: `/login` is a 307 to WorkOS, so the client router
+      // cannot follow it on an RSC fetch.
+      window.location.assign(`/login?next=${next}`);
       return;
     }
     if (status === 'signed-in' && user && !user.emailVerified && !allowUnverified) {
@@ -57,9 +59,9 @@ export function RequireAuth({
     return (
       <div className="mx-auto max-w-xl px-4 py-16">
         <Logo />
-        <Alert variant="warning" title="Firebase is not configured" className="mt-6">
-          Add your project keys to <code className="font-mono text-xs">.env.local</code> and restart
-          the dev server. See README.md → “Configure Firebase”.
+        <Alert variant="warning" title="Sign-in is not configured" className="mt-6">
+          Add the WorkOS keys to <code className="font-mono text-xs">.env.local</code> and restart
+          the dev server. See docs/MIGRATION-firebase-to-workos.md → “WorkOS setup”.
         </Alert>
       </div>
     );

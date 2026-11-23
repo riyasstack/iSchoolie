@@ -1,0 +1,212 @@
+
+> ischoolie@0.1.0 build
+> next build
+
+   ▲ Next.js 15.5.29
+   - Environments: .env.local, .env
+
+   Creating an optimized production build ...
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (429kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+ ⚠ Compiled with warnings in 1953ms
+
+./node_modules/@workos-inc/node/lib/factory-ND4UZ76L.mjs
+A Node.js API is used (process.versions at line: 6624) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+Import trace for requested module:
+./node_modules/@workos-inc/node/lib/factory-ND4UZ76L.mjs
+./node_modules/@workos-inc/node/lib/index.worker.mjs
+./node_modules/@workos-inc/authkit-nextjs/dist/esm/workos.js
+./node_modules/@workos-inc/authkit-nextjs/dist/esm/index.js
+
+./node_modules/@workos-inc/node/lib/factory-ND4UZ76L.mjs
+A Node.js API is used (process.release at line: 6626) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+Import trace for requested module:
+./node_modules/@workos-inc/node/lib/factory-ND4UZ76L.mjs
+./node_modules/@workos-inc/node/lib/index.worker.mjs
+./node_modules/@workos-inc/authkit-nextjs/dist/esm/workos.js
+./node_modules/@workos-inc/authkit-nextjs/dist/esm/index.js
+
+./node_modules/@workos-inc/node/lib/webapi-CfgZkeeN.mjs
+A Node.js API is used (CompressionStream at line: 881) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+Import trace for requested module:
+./node_modules/@workos-inc/node/lib/webapi-CfgZkeeN.mjs
+./node_modules/@workos-inc/node/lib/factory-ND4UZ76L.mjs
+./node_modules/@workos-inc/node/lib/index.worker.mjs
+./node_modules/@workos-inc/authkit-nextjs/dist/esm/workos.js
+./node_modules/@workos-inc/authkit-nextjs/dist/esm/index.js
+
+./node_modules/@workos-inc/node/lib/webapi-CfgZkeeN.mjs
+A Node.js API is used (DecompressionStream at line: 884) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+Import trace for requested module:
+./node_modules/@workos-inc/node/lib/webapi-CfgZkeeN.mjs
+./node_modules/@workos-inc/node/lib/factory-ND4UZ76L.mjs
+./node_modules/@workos-inc/node/lib/index.worker.mjs
+./node_modules/@workos-inc/authkit-nextjs/dist/esm/workos.js
+./node_modules/@workos-inc/authkit-nextjs/dist/esm/index.js
+
+ ✓ Compiled successfully in 21.1s
+   Skipping linting
+   Checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/41) ...
+   Generating static pages (10/41) 
+   Generating static pages (20/41) 
+   Generating static pages (30/41) 
+ ✓ Generating static pages (41/41)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                    Size  First Load JS
+┌ ○ /                                       10.5 kB         128 kB
+├ ○ /_not-found                               295 B         103 kB
+├ ○ /access-denied                          3.96 kB         131 kB
+├ ○ /account                                6.82 kB         161 kB
+├ ○ /account/privacy                        4.98 kB         132 kB
+├ ○ /account/providers                       4.8 kB         132 kB
+├ ○ /account/security                       7.91 kB         162 kB
+├ ○ /admin                                   5.7 kB         118 kB
+├ ○ /admin/audit                            6.11 kB         119 kB
+├ ○ /admin/guardians                        9.01 kB         122 kB
+├ ○ /admin/institutions                     7.25 kB         125 kB
+├ ○ /admin/moderation                       8.89 kB         121 kB
+├ ○ /admin/settings                          3.2 kB         112 kB
+├ ○ /admin/users                            2.18 kB         120 kB
+├ ƒ /api/account                              295 B         103 kB
+├ ƒ /api/account/delete                       295 B         103 kB
+├ ƒ /api/account/email                        295 B         103 kB
+├ ƒ /api/account/identities                   295 B         103 kB
+├ ƒ /api/account/institution/application      295 B         103 kB
+├ ƒ /api/account/onboarding                   295 B         103 kB
+├ ƒ /api/account/password                     295 B         103 kB
+├ ƒ /api/account/profile                      295 B         103 kB
+├ ƒ /api/account/sessions                     295 B         103 kB
+├ ƒ /api/account/workspace                    295 B         103 kB
+├ ƒ /api/notifications                        295 B         103 kB
+├ ƒ /api/social/account                       295 B         103 kB
+├ ƒ /api/social/blocks                        295 B         103 kB
+├ ƒ /api/social/bookmarks                     295 B         103 kB
+├ ƒ /api/social/connect/dismiss               295 B         103 kB
+├ ƒ /api/social/connect/feedback              295 B         103 kB
+├ ƒ /api/social/connect/recommendations       295 B         103 kB
+├ ƒ /api/social/connect/search                295 B         103 kB
+├ ƒ /api/social/feeds/[kind]                  295 B         103 kB
+├ ƒ /api/social/follow-requests               295 B         103 kB
+├ ƒ /api/social/follows                       295 B         103 kB
+├ ƒ /api/social/invitations                   295 B         103 kB
+├ ƒ /api/social/invitations/[id]              295 B         103 kB
+├ ƒ /api/social/invitations/accept            295 B         103 kB
+├ ƒ /api/social/lists                         295 B         103 kB
+├ ƒ /api/social/lists/[id]                    295 B         103 kB
+├ ƒ /api/social/lists/[id]/follow             295 B         103 kB
+├ ƒ /api/social/lists/[id]/members            295 B         103 kB
+├ ƒ /api/social/lists/[id]/timeline           295 B         103 kB
+├ ƒ /api/social/media                         295 B         103 kB
+├ ƒ /api/social/media/[id]                    295 B         103 kB
+├ ƒ /api/social/moderation                    295 B         103 kB
+├ ƒ /api/social/moderation/[id]               295 B         103 kB
+├ ƒ /api/social/mutes                         295 B         103 kB
+├ ƒ /api/social/notifications                 295 B         103 kB
+├ ƒ /api/social/onboarding                    295 B         103 kB
+├ ƒ /api/social/people/[handle]/[relation]    295 B         103 kB
+├ ƒ /api/social/posts                         295 B         103 kB
+├ ƒ /api/social/posts/[id]                    295 B         103 kB
+├ ƒ /api/social/posts/[id]/bookmark           295 B         103 kB
+├ ƒ /api/social/posts/[id]/reactions          295 B         103 kB
+├ ƒ /api/social/posts/[id]/replies            295 B         103 kB
+├ ƒ /api/social/posts/[id]/reposts            295 B         103 kB
+├ ƒ /api/social/profiles/[handle]             295 B         103 kB
+├ ƒ /api/social/profiles/[handle]/posts       295 B         103 kB
+├ ƒ /api/social/reports                       295 B         103 kB
+├ ƒ /api/social/search                        295 B         103 kB
+├ ƒ /api/social/settings/discoverability      295 B         103 kB
+├ ƒ /api/social/settings/interests            295 B         103 kB
+├ ƒ /api/social/settings/notifications        295 B         103 kB
+├ ƒ /api/social/settings/privacy              295 B         103 kB
+├ ƒ /api/social/topics                        295 B         103 kB
+├ ƒ /api/social/topics/[slug]/follow          295 B         103 kB
+├ ○ /apple-icon.png                             0 B            0 B
+├ ƒ /auth/action                              295 B         103 kB
+├ ƒ /auth/error                               295 B         103 kB
+├ ƒ /bookmarks                              4.18 kB         128 kB
+├ ƒ /callback                                 295 B         103 kB
+├ ○ /communities                            7.03 kB         161 kB
+├ ○ /communities/detail                     8.29 kB         136 kB
+├ ƒ /compose                                3.76 kB         123 kB
+├ ƒ /connect/invite                         6.29 kB         119 kB
+├ ƒ /connect/people                         7.86 kB         125 kB
+├ ○ /courses                                7.59 kB         162 kB
+├ ○ /courses/detail                         5.52 kB         133 kB
+├ ○ /dashboard                              9.77 kB         122 kB
+├ ○ /dashboard/assignment                   12.4 kB         152 kB
+├ ○ /dashboard/class                         5.3 kB         151 kB
+├ ○ /dashboard/institution                  5.96 kB         152 kB
+├ ○ /dashboard/parent                       5.81 kB         152 kB
+├ ○ /dashboard/student                       4.6 kB         124 kB
+├ ○ /dashboard/teacher                      9.16 kB         122 kB
+├ ƒ /explore                                1.31 kB         139 kB
+├ ƒ /feed                                   1.28 kB         131 kB
+├ ƒ /follow-requests                        5.35 kB         118 kB
+├ ƒ /forgot-password                          295 B         103 kB
+├ ○ /help                                     180 B         111 kB
+├ ○ /icon.png                                   0 B            0 B
+├ ○ /institution/status                     5.81 kB         133 kB
+├ ƒ /join/[token]                           3.38 kB         121 kB
+├ ○ /legal/privacy                            295 B         103 kB
+├ ○ /legal/terms                              295 B         103 kB
+├ ƒ /lists                                   7.9 kB         120 kB
+├ ƒ /lists/[id]                             6.54 kB         130 kB
+├ ƒ /login                                    295 B         103 kB
+├ ƒ /moderation                             4.14 kB         117 kB
+├ ƒ /notifications                            133 B         117 kB
+├ ƒ /notifications/mentions                   133 B         117 kB
+├ ○ /onboarding                             3.91 kB         128 kB
+├ ○ /onboarding/college-student             2.26 kB         158 kB
+├ ƒ /onboarding/connect                     6.08 kB         128 kB
+├ ○ /onboarding/institution                  6.7 kB         157 kB
+├ ○ /onboarding/parent                      1.37 kB         157 kB
+├ ○ /onboarding/school-student              2.85 kB         158 kB
+├ ƒ /onboarding/social                      6.22 kB         130 kB
+├ ○ /onboarding/teacher                     2.67 kB         158 kB
+├ ƒ /post/[id]                              1.05 kB         131 kB
+├ ƒ /reset-password                           295 B         103 kB
+├ ƒ /search                                 5.01 kB         133 kB
+├ ƒ /settings                                 939 B         113 kB
+├ ƒ /settings/account                         939 B         113 kB
+├ ƒ /settings/blocked                         132 B         118 kB
+├ ƒ /settings/muted                           133 B         118 kB
+├ ƒ /settings/notifications                 4.26 kB         117 kB
+├ ƒ /settings/privacy                        4.4 kB         117 kB
+├ ƒ /settings/privacy/discoverability       4.75 kB         117 kB
+├ ƒ /settings/profile                       3.66 kB         122 kB
+├ ƒ /sign-in                                  295 B         103 kB
+├ ƒ /sign-out                                 295 B         103 kB
+├ ƒ /sign-up                                  295 B         103 kB
+├ ƒ /signup                                   295 B         103 kB
+├ ƒ /topics                                 1.58 kB         114 kB
+├ ƒ /topics/[slug]                          3.33 kB         131 kB
+├ ƒ /u/[username]                           3.11 kB         131 kB
+├ ƒ /u/[username]/followers                   137 B         120 kB
+├ ƒ /u/[username]/following                   137 B         120 kB
+├ ƒ /u/[username]/media                     3.11 kB         131 kB
+├ ƒ /u/[username]/mutuals                     137 B         120 kB
+├ ƒ /u/[username]/replies                   3.11 kB         131 kB
+├ ƒ /verify-email                             295 B         103 kB
+└ ○ /workspaces                             5.64 kB         133 kB
++ First Load JS shared by all                102 kB
+  ├ chunks/1255-1ac7579e2d94c260.js         46.1 kB
+  ├ chunks/4bd1b696-182b6b13bdad92e3.js     54.2 kB
+  └ other shared chunks (total)             1.95 kB
+
+
+ƒ Middleware                                 107 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

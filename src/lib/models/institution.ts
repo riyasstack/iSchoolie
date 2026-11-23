@@ -1,4 +1,4 @@
-import type { Timestamp } from 'firebase/firestore';
+import type { AppDate } from './identity';
 
 /* ==========================================================================
    Institutions and the approval workflow
@@ -50,13 +50,25 @@ export interface InstitutionApplication {
   registrationInfo: string | null;
   declarations: InstitutionDeclarations;
   status: InstitutionApplicationStatus;
-  submittedAt: Timestamp | null;
+  submittedAt: AppDate | null;
   reviewerUid: string | null;
   reviewNote: string | null;
   /** Set by the admin CLI when the application is approved. */
   institutionId: string | null;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
+  createdAt: AppDate;
+  updatedAt: AppDate;
+}
+
+/**
+ * The applicant's own application as the API returns it: same fields, but the
+ * Firestore `AppDate`s are ISO strings so client components stay free of the
+ * Firestore SDK.
+ */
+export interface InstitutionApplicationView
+  extends Omit<InstitutionApplication, 'submittedAt' | 'createdAt' | 'updatedAt'> {
+  submittedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 /** Append-only review trail. Clients cannot write this subcollection. */
@@ -66,7 +78,7 @@ export interface InstitutionApplicationEvent {
   actorUid: string;
   actorKind: 'applicant' | 'platform_admin' | 'admin_cli';
   note: string | null;
-  createdAt: Timestamp;
+  createdAt: AppDate;
 }
 
 /** `institutions/{instId}` — created only by the privileged admin CLI. */
@@ -82,8 +94,8 @@ export interface Institution {
   status: InstitutionStatus;
   ownerUid: string;
   sourceApplicationId: string | null;
-  createdAt: Timestamp;
-  approvedAt: Timestamp;
+  createdAt: AppDate;
+  approvedAt: AppDate;
   approvedBy: string;
 }
 
@@ -97,8 +109,8 @@ export interface InstitutionMember {
   role: InstitutionMemberRole;
   status: InstitutionMemberStatus;
   addedBy: string;
-  addedAt: Timestamp;
-  revokedAt: Timestamp | null;
+  addedAt: AppDate;
+  revokedAt: AppDate | null;
 }
 
 /* ==========================================================================
@@ -140,13 +152,13 @@ export interface GuardianLink {
   relationship: GuardianRelationship;
   status: GuardianLinkStatus;
   requestedBy: string;
-  requestedAt: Timestamp;
-  studentConfirmedAt: Timestamp | null;
+  requestedAt: AppDate;
+  studentConfirmedAt: AppDate | null;
   verifiedBy: string | null;
-  verifiedAt: Timestamp | null;
+  verifiedAt: AppDate | null;
   revokedBy: string | null;
-  revokedAt: Timestamp | null;
+  revokedAt: AppDate | null;
   note: string | null;
   consent: GuardianConsent;
-  expiresAt: Timestamp | null;
+  expiresAt: AppDate | null;
 }

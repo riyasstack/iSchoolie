@@ -17,7 +17,7 @@ import {
   listApplicationEvents,
 } from '@/lib/services/institutions';
 import { formatDateTime } from '@/lib/utils/dates';
-import type { InstitutionApplication } from '@/lib/models';
+import type { InstitutionApplication, InstitutionApplicationView } from '@/lib/models';
 import type { InstitutionApplicationEvent } from '@/lib/models';
 
 const STATUS_META: Record<
@@ -38,8 +38,8 @@ const STATUS_META: Record<
 
 function StatusScreen() {
   const { user } = useAuth();
-  const application = useAsync<InstitutionApplication | null>(
-    () => (user ? getMyApplication(user.uid) : Promise.resolve(null)),
+  const application = useAsync<InstitutionApplicationView | null>(
+    () => (user ? getMyApplication() : Promise.resolve(null)),
     [user?.uid],
     null,
   );

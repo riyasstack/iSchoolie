@@ -70,7 +70,7 @@ export function TeacherForm() {
       });
       await refresh({ forceToken: false });
       toast({ title: 'Teacher studio created', variant: 'success' });
-      router.replace('/dashboard/teacher');
+      router.replace('/feed');
     } catch (cause) {
       setBusy(false);
       setTopError(cause instanceof Error ? cause.message : 'Could not save your profile.');

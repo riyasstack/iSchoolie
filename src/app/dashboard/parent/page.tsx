@@ -184,7 +184,7 @@ export default function ParentDashboardPage() {
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold text-ink">{link.studentName}</p>
                       <p className="text-xs text-subtle">
-                        Verified {link.verifiedAt ? formatDate(new Date(link.verifiedAt.toDate()).toISOString()) : '—'}
+                        Verified {link.verifiedAt ? formatDate(new Date(link.verifiedAt as any).toISOString()) : '—'}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">

@@ -14,7 +14,6 @@ import { buttonClass } from '@/components/ui/button-styles';
 import { Card, CardBody, CardHeader, PageHeader } from '@/components/ui/card';
 import { Avatar } from '@/components/ui/empty-state';
 import { Field, Input, Select } from '@/components/ui/field';
-import { PushSettingsCard } from '@/components/notifications/push-settings';
 import { useAuth } from '@/components/providers/auth-provider';
 import { useAsync } from '@/hooks/use-async';
 import { useToast } from '@/components/ui/toast';
@@ -34,7 +33,7 @@ function AccountScreen() {
   const { toast } = useToast();
   const [busy, setBusy] = React.useState(false);
   const privateProfile = useAsync<UserPrivateProfile | null>(
-    () => (user ? loadPrivateProfile(user.uid) : Promise.resolve(null)),
+    () => (user ? loadPrivateProfile() : Promise.resolve(null)),
     [user?.uid],
     null,
   );
@@ -56,7 +55,7 @@ function AccountScreen() {
     if (!user || busy) return;
     setBusy(true);
     try {
-      await updatePublicProfile(user.uid, {
+      await updatePublicProfile({
         displayName: values.displayName,
         headline: values.headline || null,
         country: values.country || null,
@@ -178,7 +177,6 @@ function AccountScreen() {
             </CardBody>
           </Card>
 
-          <PushSettingsCard />
         </div>
       </div>
     </AppShell>

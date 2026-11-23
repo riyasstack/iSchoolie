@@ -47,7 +47,7 @@ export function buildWorkspaces(input: {
       kind: 'personal',
       label: 'Personal iSchoolie',
       description: 'Your profile, communities and network.',
-      href: '/dashboard',
+      href: '/feed',
     },
   ];
 

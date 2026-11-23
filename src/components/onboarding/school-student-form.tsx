@@ -81,7 +81,7 @@ export function SchoolStudentForm() {
       });
       await refresh({ forceToken: false });
       toast({ title: 'Student learning space ready', variant: 'success' });
-      router.replace('/dashboard/student');
+      router.replace('/feed');
     } catch (cause) {
       setBusy(false);
       setTopError(cause instanceof Error ? cause.message : 'Could not save your profile.');

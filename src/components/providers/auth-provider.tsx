@@ -1,19 +1,16 @@
 'use client';
 
 import * as React from 'react';
-import { onAuthStateChanged, signOut as fbSignOut, type User } from 'firebase/auth';
-import { FirebaseNotConfiguredError, getFirebaseAuth } from '@/lib/firebase/client';
-import { isFirebaseConfigured } from '@/lib/config';
-import { ensureAccountDocuments, loadAccount, type AccountSnapshot } from '@/lib/services/users';
+import { fetchAccount, type AccountSnapshot } from '@/lib/services/users';
 import { effectiveRoles } from '@/lib/auth/permissions';
 import { buildWorkspaces, type MembershipInput, type WorkspaceOption } from '@/lib/auth/workspaces';
-import type { AccountClaims, RoleKey, UserProfile } from '@/lib/models';
+import type { AccountClaims, RoleKey, SessionUser, UserProfile } from '@/lib/models';
 
 export type AuthStatus = 'unconfigured' | 'loading' | 'signed-out' | 'signed-in' | 'error';
 
 export interface AuthContextValue {
   status: AuthStatus;
-  user: User | null;
+  user: SessionUser | null;
   profile: UserProfile | null;
   account: AccountSnapshot | null;
   claims: AccountClaims;
@@ -42,23 +39,17 @@ export function useAuth(): AuthContextValue {
   return context;
 }
 
-function readClaims(raw: Record<string, unknown> | undefined, rolesDoc: AccountSnapshot['roles']): AccountClaims {
-  const rolesFromDoc = rolesDoc ? effectiveRoles(rolesDoc) : [];
-  return {
-    platformAdmin: raw?.platformAdmin === true,
-    teacherVerified: raw?.teacherVerified === true,
-    suspended: raw?.suspended === true,
-    roles: Array.isArray(raw?.roles)
-      ? (raw.roles as RoleKey[])
-      : rolesFromDoc,
-  };
-}
-
+/**
+ * Session provider.
+ *
+ * WorkOS AuthKit owns the credentials and the cookie; this provider only loads
+ * the iSchoolie account snapshot that the cookie authorises. Sign-in and
+ * sign-out are full-page navigations to `/sign-in` and `/sign-out`, so the
+ * browser always carries the sealed session cookie.
+ */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [status, setStatus] = React.useState<AuthStatus>(
-    isFirebaseConfigured ? 'loading' : 'unconfigured',
-  );
-  const [user, setUser] = React.useState<User | null>(null);
+  const [status, setStatus] = React.useState<AuthStatus>('loading');
+  const [user, setUser] = React.useState<SessionUser | null>(null);
   const [account, setAccount] = React.useState<AccountSnapshot | null>(null);
   const [claims, setClaims] = React.useState<AccountClaims>(DEFAULT_CLAIMS);
   const [error, setError] = React.useState<string | null>(null);
@@ -71,26 +62,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const hydrate = React.useCallback(async (fbUser: User, forceToken = false) => {
+  const load = React.useCallback(async () => {
     try {
-      await ensureAccountDocuments(fbUser);
-      const [snapshot, token] = await Promise.all([
-        loadAccount(fbUser.uid),
-        fbUser.getIdTokenResult(forceToken),
-      ]);
+      const payload = await fetchAccount();
       if (!mounted.current) return;
-      setAccount(snapshot);
-      setClaims(readClaims(token.claims as Record<string, unknown>, snapshot.roles));
+
+      if (!payload.configured) {
+        setUser(null);
+        setAccount(null);
+        setClaims(DEFAULT_CLAIMS);
+        setStatus('unconfigured');
+        return;
+      }
+
+      if (!payload.user) {
+        setUser(null);
+        setAccount(null);
+        setClaims(DEFAULT_CLAIMS);
+        setStatus('signed-out');
+        return;
+      }
+
+      setUser(payload.user);
+      setAccount(payload.account);
+      setClaims(payload.claims ?? DEFAULT_CLAIMS);
       setError(null);
       setStatus('signed-in');
     } catch (cause) {
       if (!mounted.current) return;
-      if (cause instanceof FirebaseNotConfiguredError) {
-        setStatus('unconfigured');
-        return;
-      }
-      // Auth succeeded but the profile could not be loaded: show a recoverable
-      // state rather than pretending the session is healthy.
+      // The session is valid but the account could not be loaded: show a
+      // recoverable state rather than pretending everything is fine.
       setError(
         cause instanceof Error
           ? cause.message
@@ -101,51 +102,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   React.useEffect(() => {
-    if (!isFirebaseConfigured) {
-      setStatus('unconfigured');
-      return;
-    }
-    let unsubscribe = () => {};
-    try {
-      unsubscribe = onAuthStateChanged(getFirebaseAuth(), (fbUser) => {
-        setUser(fbUser);
-        if (!fbUser) {
-          setAccount(null);
-          setClaims(DEFAULT_CLAIMS);
-          setStatus('signed-out');
-          return;
-        }
-        setStatus('loading');
-        void hydrate(fbUser);
-      });
-    } catch {
-      setStatus('unconfigured');
-    }
-    return () => unsubscribe();
-  }, [hydrate]);
+    void load();
+  }, [load]);
 
   const refresh = React.useCallback(
-    async (options?: { forceToken?: boolean }) => {
-      const current = getFirebaseAuth().currentUser;
-      if (!current) return;
-      await hydrate(current, options?.forceToken ?? true);
+    async (_options?: { forceToken?: boolean }) => {
+      await load();
     },
-    [hydrate],
+    [load],
   );
 
   const signOut = React.useCallback(async () => {
-    try {
-      await fbSignOut(getFirebaseAuth());
-    } finally {
-      setAccount(null);
-      setClaims(DEFAULT_CLAIMS);
-      setStatus('signed-out');
-    }
+    setUser(null);
+    setAccount(null);
+    setClaims(DEFAULT_CLAIMS);
+    setStatus('signed-out');
+    // Ends the AuthKit session server-side and clears the cookie.
+    window.location.assign('/sign-out');
   }, []);
 
   const roles = React.useMemo(
-    () => (account?.roles ? effectiveRoles(account.roles) : []),
-    [account?.roles],
+    () => (account?.roles ? effectiveRoles(account.roles) : claims.roles),
+    [account?.roles, claims.roles],
   );
 
   const memberships = React.useMemo(
@@ -156,6 +134,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const workspaces = React.useMemo(
     () => buildWorkspaces({ roles, memberships }),
     [roles, memberships],
+  );
+
+  const teacherVerified = React.useMemo(
+    () =>
+      claims.teacherVerified ||
+      account?.roles?.teacherVerification.status === 'verified',
+    [claims.teacherVerified, account?.roles?.teacherVerification.status],
   );
 
   const value = React.useMemo<AuthContextValue>(
@@ -169,7 +154,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       memberships,
       workspaces,
       platformAdmin: claims.platformAdmin,
-      teacherVerified: claims.teacherVerified || account?.roles?.teacherVerification.status === 'verified',
+      teacherVerified,
       error,
       refresh,
       signOut,
@@ -182,6 +167,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       roles,
       memberships,
       workspaces,
+      teacherVerified,
       error,
       refresh,
       signOut,

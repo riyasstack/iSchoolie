@@ -2,7 +2,6 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { KeyRound, LogOut, Mail, ShieldAlert, Trash2 } from 'lucide-react';
@@ -19,27 +18,25 @@ import {
   changeEmail,
   changePassword,
   deleteAccount,
-  signOutEverywhere,
-} from '@/lib/auth/operations';
+  revokeAllSessions,
+} from '@/lib/services/users';
 import {
   changeEmailSchema,
   changePasswordSchema,
   type ChangeEmailValues,
   type ChangePasswordValues,
 } from '@/lib/schemas/auth';
-import { updateDoc, doc } from 'firebase/firestore';
-import { requireDb } from '@/lib/firebase/db';
 
 function SecurityScreen() {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
-  const router = useRouter();
   const [passwordBusy, setPasswordBusy] = React.useState(false);
   const [emailBusy, setEmailBusy] = React.useState(false);
   const [deleteBusy, setDeleteBusy] = React.useState(false);
   const [deletePassword, setDeletePassword] = React.useState('');
   const [deleteConfirm, setDeleteConfirm] = React.useState('');
   const [deleteError, setDeleteError] = React.useState<string | null>(null);
+  const [revokeBusy, setRevokeBusy] = React.useState(false);
 
   const passwordForm = useForm<ChangePasswordValues>({
     resolver: zodResolver(changePasswordSchema),
@@ -49,8 +46,6 @@ function SecurityScreen() {
     resolver: zodResolver(changeEmailSchema),
     defaultValues: { email: '' },
   });
-
-  const hasPasswordProvider = user?.providerData.some((info) => info.providerId === 'password');
 
   async function submitPassword(values: ChangePasswordValues) {
     setPasswordBusy(true);
@@ -70,7 +65,7 @@ function SecurityScreen() {
     setEmailBusy(false);
     toast({
       title: result.ok ? 'Confirmation sent' : 'Could not start the email change',
-      description: result.message,
+      description: result.message ?? (result.ok ? 'Check your inbox to verify the new address.' : undefined),
       variant: result.ok ? 'success' : 'danger',
     });
     if (result.ok) emailForm.reset();
@@ -84,24 +79,25 @@ function SecurityScreen() {
     }
     setDeleteBusy(true);
     setDeleteError(null);
-    // Mark the profile first so operators can purge it; auth deletion follows.
-    try {
-      await updateDoc(doc(requireDb(), 'users', user.uid), {
-        status: 'pending_deletion',
-        updatedAt: new Date(),
-      });
-    } catch {
-      /* Non-fatal: the auth deletion is the authoritative step. */
-    }
     const result = await deleteAccount(deletePassword || undefined);
     setDeleteBusy(false);
     if (result.ok) {
       toast({ title: 'Account deleted', variant: 'success' });
       await signOut();
-      router.replace('/');
     } else {
-      setDeleteError(result.message);
+      setDeleteError(result.message ?? 'Could not delete the account.');
     }
+  }
+
+  async function signOutEverywhere() {
+    setRevokeBusy(true);
+    try {
+      await revokeAllSessions();
+    } catch {
+      // Best effort; still sign out locally.
+    }
+    setRevokeBusy(false);
+    await signOut();
   }
 
   return (
@@ -114,40 +110,28 @@ function SecurityScreen() {
       />
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {hasPasswordProvider ? (
-          <Card>
-            <CardHeader title="Change password" description="You will need your current password." />
-            <CardBody>
-              <form onSubmit={passwordForm.handleSubmit(submitPassword)} className="space-y-3" noValidate>
-                <Field label="Current password" htmlFor="currentPassword" error={passwordForm.formState.errors.currentPassword?.message} required>
-                  <PasswordInput id="currentPassword" autoComplete="current-password" {...passwordForm.register('currentPassword')} />
-                </Field>
-                <Field label="New password" htmlFor="newPassword" error={passwordForm.formState.errors.newPassword?.message} required>
-                  <PasswordInput id="newPassword" autoComplete="new-password" {...passwordForm.register('newPassword')} />
-                </Field>
-                <Field label="Confirm new password" htmlFor="confirmNewPassword" error={passwordForm.formState.errors.confirmPassword?.message} required>
-                  <PasswordInput id="confirmNewPassword" autoComplete="new-password" {...passwordForm.register('confirmPassword')} />
-                </Field>
-                <Button type="submit" loading={passwordBusy} icon={<KeyRound className="h-4 w-4" />}>
-                  Update password
-                </Button>
-              </form>
-            </CardBody>
-          </Card>
-        ) : (
-          <Card>
-            <CardHeader title="Password" />
-            <CardBody>
-              <Alert variant="neutral" title="You sign in with a provider">
-                This account uses Google, GitHub or another provider. Add an email/password sign-in
-                from Linked providers if you want a password as a backup.
-              </Alert>
-            </CardBody>
-          </Card>
-        )}
+        <Card>
+          <CardHeader title="Change password" description="You will need your current password." />
+          <CardBody>
+            <form onSubmit={passwordForm.handleSubmit(submitPassword)} className="space-y-3" noValidate>
+              <Field label="Current password" htmlFor="currentPassword" error={passwordForm.formState.errors.currentPassword?.message} required>
+                <PasswordInput id="currentPassword" autoComplete="current-password" {...passwordForm.register('currentPassword')} />
+              </Field>
+              <Field label="New password" htmlFor="newPassword" error={passwordForm.formState.errors.newPassword?.message} required>
+                <PasswordInput id="newPassword" autoComplete="new-password" {...passwordForm.register('newPassword')} />
+              </Field>
+              <Field label="Confirm new password" htmlFor="confirmNewPassword" error={passwordForm.formState.errors.confirmPassword?.message} required>
+                <PasswordInput id="confirmNewPassword" autoComplete="new-password" {...passwordForm.register('confirmPassword')} />
+              </Field>
+              <Button type="submit" loading={passwordBusy} icon={<KeyRound className="h-4 w-4" />}>
+                Update password
+              </Button>
+            </form>
+          </CardBody>
+        </Card>
 
         <Card>
-          <CardHeader title="Change email" description="Firebase sends a confirmation link to the new address." />
+          <CardHeader title="Change email" description="WorkOS sends a verification link to the new address." />
           <CardBody>
             <form onSubmit={emailForm.handleSubmit(submitEmail)} className="space-y-3" noValidate>
               <Field
@@ -183,20 +167,16 @@ function SecurityScreen() {
             <div className="flex flex-wrap gap-2">
               <Button
                 variant="outline"
-                onClick={async () => {
-                  await signOutEverywhere();
-                  router.replace('/login');
-                }}
+                loading={revokeBusy}
+                onClick={() => void signOutEverywhere()}
                 icon={<LogOut className="h-4 w-4" />}
               >
-                Sign out now
+                Sign out everywhere
               </Button>
             </div>
             <p className="text-2xs text-subtle">
-              Revoking access quickly: role and membership checks read Firestore on every request,
-              so an institution revocation applies immediately. Custom-claim changes (platform
-              admin, verified educator) apply when the ID token refreshes — up to one hour — which is
-              why sensitive pages also verify Firestore records.
+              Revoking access quickly: role and membership checks are enforced on every request, so an
+              institution revocation applies immediately.
             </p>
           </CardBody>
         </Card>
@@ -218,16 +198,14 @@ function SecurityScreen() {
                 placeholder="DELETE"
               />
             </Field>
-            {hasPasswordProvider && (
-              <Field label="Password" htmlFor="deletePassword" required>
-                <PasswordInput
-                  id="deletePassword"
-                  autoComplete="current-password"
-                  value={deletePassword}
-                  onChange={(event) => setDeletePassword(event.target.value)}
-                />
-              </Field>
-            )}
+            <Field label="Password (if you use one)" htmlFor="deletePassword">
+              <PasswordInput
+                id="deletePassword"
+                autoComplete="current-password"
+                value={deletePassword}
+                onChange={(event) => setDeletePassword(event.target.value)}
+              />
+            </Field>
             <Button
               variant="danger"
               loading={deleteBusy}
@@ -256,4 +234,4 @@ export default function SecurityPage() {
       <SecurityScreen />
     </RequireAuth>
   );
-}
+}

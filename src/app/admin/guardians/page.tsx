@@ -16,7 +16,6 @@ import {
   rejectGuardianRequest,
   type GuardianRequestDoc,
 } from '@/lib/services/guardian';
-import { getDocData } from '@/lib/firebase/db';
 import type { UserProfile } from '@/lib/models';
 
 export default function AdminGuardiansPage() {
@@ -29,10 +28,9 @@ export default function AdminGuardiansPage() {
     if (!user || busyId || !request.studentUid) return;
     setBusyId(request.id);
     try {
-      const student = await getDocData<UserProfile>('users', request.studentUid);
       await approveGuardianRequest(
         request,
-        { uid: request.studentUid, displayName: student?.displayName ?? request.studentEmail },
+        { uid: request.studentUid, displayName: request.studentEmail },
         user.uid,
       );
       toast({ title: 'Guardian relationship verified', variant: 'success' });

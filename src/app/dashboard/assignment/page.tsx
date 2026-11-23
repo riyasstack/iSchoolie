@@ -84,7 +84,7 @@ export default function AssignmentPage() {
           It may be unpublished, from a class you are not enrolled in, or behind revoked access.
           Firestore Security Rules reject the read either way.
         </Alert>
-        <Link href="/dashboard" className={buttonClass('secondary', 'sm', 'mt-4')}>Back to my dashboard</Link>
+        <Link href="/feed" className={buttonClass('secondary', 'sm', 'mt-4')}>Back to home</Link>
       </div>
     );
   }

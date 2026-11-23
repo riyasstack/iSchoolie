@@ -15,3 +15,7 @@ firebase-debug.log
 firestore-debug.log
 ui-debug.log
 .DS_Store
+
+# social runtime uploads and local dev logs
+.data/
+dev-social.log

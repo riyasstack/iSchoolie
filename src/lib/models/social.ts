@@ -1,4 +1,4 @@
-import type { Timestamp } from 'firebase/firestore';
+import type { AppDate } from './identity';
 
 /* ==========================================================================
    Communities, moderation, notifications and audit
@@ -16,13 +16,13 @@ export interface Community {
   createdBy: string;
   memberCount: number;
   postCount: number;
-  createdAt: Timestamp;
+  createdAt: AppDate;
 }
 
 export interface CommunityMember {
   uid: string;
   displayName: string;
-  joinedAt: Timestamp;
+  joinedAt: AppDate;
 }
 
 export type PostStatus = 'visible' | 'hidden' | 'removed';
@@ -36,7 +36,7 @@ export interface Post {
   status: PostStatus;
   commentCount: number;
   likeCount: number;
-  createdAt: Timestamp;
+  createdAt: AppDate;
 }
 
 export interface Comment {
@@ -44,7 +44,7 @@ export interface Comment {
   authorUid: string;
   authorName: string;
   body: string;
-  createdAt: Timestamp;
+  createdAt: AppDate;
 }
 
 export type ReportTargetType = 'post' | 'comment' | 'user' | 'message';
@@ -60,9 +60,9 @@ export interface Report {
   details: string | null;
   status: ReportStatus;
   handledBy: string | null;
-  handledAt: Timestamp | null;
+  handledAt: AppDate | null;
   action: string | null;
-  createdAt: Timestamp;
+  createdAt: AppDate;
 }
 
 export type NotificationType =
@@ -81,7 +81,7 @@ export interface AppNotification {
   body: string;
   href: string | null;
   read: boolean;
-  createdAt: Timestamp;
+  createdAt: AppDate;
 }
 
 export type AuditActorKind = 'admin_cli' | 'platform_admin' | 'system';
@@ -95,6 +95,6 @@ export interface AuditLog {
   subjectType: string;
   subjectId: string;
   detail: string;
-  createdAt: Timestamp;
+  createdAt: AppDate;
   metadata: Record<string, string | number | boolean | null>;
 }

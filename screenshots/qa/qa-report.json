@@ -1,0 +1,66 @@
+{
+  "375": {
+    "scrollWidth": 375,
+    "clientWidth": 375,
+    "height": 22263,
+    "brokenImages": [],
+    "h1": "Where Learning and Connections Grow Together.",
+    "h2Count": 19,
+    "errors": []
+  },
+  "390": {
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "height": 21993,
+    "brokenImages": [],
+    "h1": "Where Learning and Connections Grow Together.",
+    "h2Count": 19,
+    "errors": []
+  },
+  "768": {
+    "scrollWidth": 768,
+    "clientWidth": 768,
+    "height": 19143,
+    "brokenImages": [],
+    "h1": "Where Learning and Connections Grow Together.",
+    "h2Count": 19,
+    "errors": []
+  },
+  "1024": {
+    "scrollWidth": 1024,
+    "clientWidth": 1024,
+    "height": 14505,
+    "brokenImages": [],
+    "h1": "Where Learning and Connections Grow Together.",
+    "h2Count": 19,
+    "errors": []
+  },
+  "1440": {
+    "scrollWidth": 1440,
+    "clientWidth": 1440,
+    "height": 15109,
+    "brokenImages": [],
+    "h1": "Where Learning and Connections Grow Together.",
+    "h2Count": 19,
+    "errors": []
+  },
+  "1920": {
+    "scrollWidth": 1920,
+    "clientWidth": 1920,
+    "height": 15285,
+    "brokenImages": [],
+    "h1": "Where Learning and Connections Grow Together.",
+    "h2Count": 19,
+    "errors": []
+  },
+  "interactions": {
+    "megaOpen": "true",
+    "megaAfterEscape": "false",
+    "searchResults": 4,
+    "faqExpanded": "true"
+  },
+  "mobileMenu": {
+    "drawerVisible": "1",
+    "drawerAfterEscape": "0"
+  }
+}

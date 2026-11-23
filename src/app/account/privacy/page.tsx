@@ -17,7 +17,7 @@ import { formatDateTime } from '@/lib/utils/dates';
 function PrivacyScreen() {
   const { user, profile } = useAuth();
   const privateProfile = useAsync(
-    () => (user ? loadPrivateProfile(user.uid) : Promise.resolve(null)),
+    () => (user ? loadPrivateProfile() : Promise.resolve(null)),
     [user?.uid],
     null,
   );

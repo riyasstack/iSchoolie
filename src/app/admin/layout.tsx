@@ -20,7 +20,7 @@ function AdminGuard({ children }: { children: React.ReactNode }) {
           from the browser, and hiding the route is not what protects it: Security Rules refuse the
           underlying reads and writes.
         </Alert>
-        <Link href="/dashboard" className={buttonClass('secondary', 'sm', 'mt-4')}>
+        <Link href="/feed" className={buttonClass('secondary', 'sm', 'mt-4')}>
           Back to my dashboard
         </Link>
       </div>

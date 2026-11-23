@@ -22,8 +22,8 @@ export default function GlobalError({
       {error.digest && <p className="mt-1 font-mono text-2xs text-subtle">Reference: {error.digest}</p>}
       <div className="mt-5 flex gap-2">
         <Button onClick={reset}>Try again</Button>
-        <Button variant="outline" onClick={() => window.location.assign('/dashboard')}>
-          Go to dashboard
+        <Button variant="outline" onClick={() => window.location.assign('/feed')}>
+          Go to feed
         </Button>
       </div>
     </div>

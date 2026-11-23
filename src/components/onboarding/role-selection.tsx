@@ -70,7 +70,7 @@ export function RoleSelection() {
     setBusy(true);
     await refresh({ forceToken: false });
     setBusy(false);
-    router.replace('/dashboard');
+    router.replace('/feed');
   }
 
   return (
@@ -152,7 +152,7 @@ export function RoleSelection() {
         </p>
         {hasRoles && (
           <Button variant="primary" size="sm" loading={busy} onClick={() => void finishAsPersonal()}>
-            Go to my dashboard
+            Go to my feed
           </Button>
         )}
       </div>

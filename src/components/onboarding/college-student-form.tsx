@@ -70,7 +70,7 @@ export function CollegeStudentForm() {
       });
       await refresh({ forceToken: false });
       toast({ title: 'Higher-education workspace ready', variant: 'success' });
-      router.replace('/dashboard/student');
+      router.replace('/feed');
     } catch (cause) {
       setBusy(false);
       setTopError(cause instanceof Error ? cause.message : 'Could not save your profile.');

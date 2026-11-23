@@ -1,16 +1,14 @@
 import type { NextConfig } from 'next';
 
 /**
- * iSchoolie is deployed as a **statically exported** Next.js app on Firebase
- * Hosting. That choice is deliberate: SSR (`next start`, App Hosting) needs a
- * Node/Blaze runtime, and Cloud Functions are Blaze-only. All data access is
- * client-side Firebase SDK, so the export contains no server secrets.
+ * iSchoolie runs on a Node server: WorkOS AuthKit completes the OAuth callback
+ * in a route handler, and identity data is read from Postgres through server
+ * routes. A static export (`output: 'export'`) cannot do either, so it is gone.
  *
- * Consequence: routes must not use dynamic segments (unknown at build time).
- * Entity detail pages read ids from the query string instead.
+ * The remaining data domains still read Firestore from the browser until they
+ * are ported; that does not require a static host.
  */
 const nextConfig: NextConfig = {
-  output: 'export',
   reactStrictMode: true,
   trailingSlash: false,
   images: { unoptimized: true },

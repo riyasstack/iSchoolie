@@ -1,0 +1,468 @@
+   ▲ Next.js 15.5.29
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.1.41:3000
+
+ ✓ Starting...
+ ✓ Ready in 772ms
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Io, cause: Some(Os { code: 10054, kind: ConnectionReset, message: "An existing connection was forcibly closed by the remote host." }) }
+prisma:error 
+Invalid `prisma.user.findFirst()` invocation:
+
+
+Can't reach database server at `127.0.0.1:5433`
+
+Please make sure your database server is running at `127.0.0.1:5433`.
+Error [PrismaClientKnownRequestError]: 
+Invalid `prisma.user.findFirst()` invocation:
+
+
+Can't reach database server at `127.0.0.1:5433`
+
+Please make sure your database server is running at `127.0.0.1:5433`.
+    at async l (D:\claude\ischoolie\.next\server\chunks\8201.js:1:2176)
+    at async z (D:\claude\ischoolie\.next\server\app\api\notifications\route.js:1:2527)
+    at async k (D:\claude\ischoolie\.next\server\app\api\notifications\route.js:1:5693) {
+  code: 'P1001',
+  meta: [Object],
+  clientVersion: '6.19.3'
+}
+prisma:error 
+Invalid `prisma.user.findFirst()` invocation:
+
+
+Can't reach database server at `127.0.0.1:5433`
+
+Please make sure your database server is running at `127.0.0.1:5433`.
+Error [PrismaClientKnownRequestError]: 
+Invalid `prisma.user.findFirst()` invocation:
+
+
+Can't reach database server at `127.0.0.1:5433`
+
+Please make sure your database server is running at `127.0.0.1:5433`.
+    at async l (D:\claude\ischoolie\.next\server\chunks\8201.js:1:2176)
+    at async z (D:\claude\ischoolie\.next\server\app\api\notifications\route.js:1:2527)
+    at async k (D:\claude\ischoolie\.next\server\app\api\notifications\route.js:1:5693) {
+  code: 'P1001',
+  meta: [Object],
+  clientVersion: '6.19.3'
+}
+prisma:error 
+Invalid `prisma.user.findFirst()` invocation:
+
+
+Can't reach database server at `127.0.0.1:5433`
+
+Please make sure your database server is running at `127.0.0.1:5433`.
+Error [PrismaClientKnownRequestError]: 
+Invalid `prisma.user.findFirst()` invocation:
+
+
+Can't reach database server at `127.0.0.1:5433`
+
+Please make sure your database server is running at `127.0.0.1:5433`.
+    at async l (D:\claude\ischoolie\.next\server\chunks\8201.js:1:2176)
+    at async z (D:\claude\ischoolie\.next\server\app\api\notifications\route.js:1:2527)
+    at async k (D:\claude\ischoolie\.next\server\app\api\notifications\route.js:1:5693) {
+  code: 'P1001',
+  meta: [Object],
+  clientVersion: '6.19.3'
+}
+prisma:error 
+Invalid `prisma.user.findFirst()` invocation:
+
+
+Can't reach database server at `127.0.0.1:5433`
+
+Please make sure your database server is running at `127.0.0.1:5433`.
+Error [PrismaClientKnownRequestError]: 
+Invalid `prisma.user.findFirst()` invocation:
+
+
+Can't reach database server at `127.0.0.1:5433`
+
+Please make sure your database server is running at `127.0.0.1:5433`.
+    at async l (D:\claude\ischoolie\.next\server\chunks\8201.js:1:2176)
+    at async z (D:\claude\ischoolie\.next\server\app\api\notifications\route.js:1:2527)
+    at async k (D:\claude\ischoolie\.next\server\app\api\notifications\route.js:1:5693) {
+  code: 'P1001',
+  meta: [Object],
+  clientVersion: '6.19.3'
+}
+prisma:error 
+Invalid `prisma.user.findFirst()` invocation:
+
+
+Can't reach database server at `127.0.0.1:5433`
+
+Please make sure your database server is running at `127.0.0.1:5433`.
+Error [PrismaClientKnownRequestError]: 
+Invalid `prisma.user.findFirst()` invocation:
+
+
+Can't reach database server at `127.0.0.1:5433`
+
+Please make sure your database server is running at `127.0.0.1:5433`.
+    at async l (D:\claude\ischoolie\.next\server\chunks\8201.js:1:2176)
+    at async z (D:\claude\ischoolie\.next\server\app\api\notifications\route.js:1:2527)
+    at async k (D:\claude\ischoolie\.next\server\app\api\notifications\route.js:1:5693) {
+  code: 'P1001',
+  meta: [Object],
+  clientVersion: '6.19.3'
+}
+prisma:error 
+Invalid `prisma.user.findFirst()` invocation:
+
+
+Can't reach database server at `127.0.0.1:5433`
+
+Please make sure your database server is running at `127.0.0.1:5433`.
+Error [PrismaClientKnownRequestError]: 
+Invalid `prisma.user.findFirst()` invocation:
+
+
+Can't reach database server at `127.0.0.1:5433`
+
+Please make sure your database server is running at `127.0.0.1:5433`.
+    at async l (D:\claude\ischoolie\.next\server\chunks\8201.js:1:2176)
+    at async z (D:\claude\ischoolie\.next\server\app\api\notifications\route.js:1:2527)
+    at async k (D:\claude\ischoolie\.next\server\app\api\notifications\route.js:1:5693) {
+  code: 'P1001',
+  meta: [Object],
+  clientVersion: '6.19.3'
+}
+prisma:error 
+Invalid `prisma.user.findFirst()` invocation:
+
+
+Can't reach database server at `127.0.0.1:5433`
+
+Please make sure your database server is running at `127.0.0.1:5433`.
+Error [PrismaClientKnownRequestError]: 
+Invalid `prisma.user.findFirst()` invocation:
+
+
+Can't reach database server at `127.0.0.1:5433`
+
+Please make sure your database server is running at `127.0.0.1:5433`.
+    at async l (D:\claude\ischoolie\.next\server\chunks\8201.js:1:2176)
+    at async z (D:\claude\ischoolie\.next\server\app\api\notifications\route.js:1:2527)
+    at async k (D:\claude\ischoolie\.next\server\app\api\notifications\route.js:1:5693) {
+  code: 'P1001',
+  meta: [Object],
+  clientVersion: '6.19.3'
+}
+prisma:error 
+Invalid `prisma.user.findFirst()` invocation:
+
+
+Can't reach database server at `127.0.0.1:5433`
+
+Please make sure your database server is running at `127.0.0.1:5433`.
+Error [PrismaClientKnownRequestError]: 
+Invalid `prisma.user.findFirst()` invocation:
+
+
+Can't reach database server at `127.0.0.1:5433`
+
+Please make sure your database server is running at `127.0.0.1:5433`.
+    at async l (D:\claude\ischoolie\.next\server\chunks\8201.js:1:2176)
+    at async z (D:\claude\ischoolie\.next\server\app\api\notifications\route.js:1:2527)
+    at async k (D:\claude\ischoolie\.next\server\app\api\notifications\route.js:1:5693) {
+  code: 'P1001',
+  meta: [Object],
+  clientVersion: '6.19.3'
+}
+prisma:error 
+Invalid `prisma.user.findFirst()` invocation:
+
+
+Can't reach database server at `127.0.0.1:5433`
+
+Please make sure your database server is running at `127.0.0.1:5433`.
+Error [PrismaClientKnownRequestError]: 
+Invalid `prisma.user.findFirst()` invocation:
+
+
+Can't reach database server at `127.0.0.1:5433`
+
+Please make sure your database server is running at `127.0.0.1:5433`.
+    at async l (D:\claude\ischoolie\.next\server\chunks\8201.js:1:2176)
+    at async A (D:\claude\ischoolie\.next\server\app\api\account\route.js:1:3319)
+    at async k (D:\claude\ischoolie\.next\server\app\api\account\route.js:1:6834) {
+  code: 'P1001',
+  meta: [Object],
+  clientVersion: '6.19.3'
+}
+prisma:error 
+Invalid `prisma.user.findFirst()` invocation:
+
+
+Can't reach database server at `127.0.0.1:5433`
+
+Please make sure your database server is running at `127.0.0.1:5433`.
+Error [PrismaClientKnownRequestError]: 
+Invalid `prisma.user.findFirst()` invocation:
+
+
+Can't reach database server at `127.0.0.1:5433`
+
+Please make sure your database server is running at `127.0.0.1:5433`.
+    at async l (D:\claude\ischoolie\.next\server\chunks\8201.js:1:2176)
+    at async A (D:\claude\ischoolie\.next\server\app\api\account\route.js:1:3319)
+    at async k (D:\claude\ischoolie\.next\server\app\api\account\route.js:1:6834) {
+  code: 'P1001',
+  meta: [Object],
+  clientVersion: '6.19.3'
+}
+prisma:error 
+Invalid `prisma.user.findFirst()` invocation:
+
+
+Can't reach database server at `127.0.0.1:5433`
+
+Please make sure your database server is running at `127.0.0.1:5433`.
+[AuthKit callback error] Error [PrismaClientKnownRequestError]: 
+Invalid `prisma.user.findFirst()` invocation:
+
+
+Can't reach database server at `127.0.0.1:5433`
+
+Please make sure your database server is running at `127.0.0.1:5433`.
+    at async l (D:\claude\ischoolie\.next\server\chunks\8201.js:1:2176)
+    at async onSuccess (D:\claude\ischoolie\.next\server\app\callback\route.js:1:4725)
+    at async N.returnPathname (D:\claude\ischoolie\.next\server\app\callback\route.js:1:3956)
+    at async k (D:\claude\ischoolie\.next\server\app\callback\route.js:1:7451) {
+  code: 'P1001',
+  meta: [Object],
+  clientVersion: '6.19.3'
+}
+prisma:error 
+Invalid `prisma.user.findFirst()` invocation:
+
+
+Can't reach database server at `127.0.0.1:5433`
+
+Please make sure your database server is running at `127.0.0.1:5433`.
+[AuthKit callback error] Error [PrismaClientKnownRequestError]: 
+Invalid `prisma.user.findFirst()` invocation:
+
+
+Can't reach database server at `127.0.0.1:5433`
+
+Please make sure your database server is running at `127.0.0.1:5433`.
+    at async l (D:\claude\ischoolie\.next\server\chunks\8201.js:1:2176)
+    at async onSuccess (D:\claude\ischoolie\.next\server\app\callback\route.js:1:4725)
+    at async N.returnPathname (D:\claude\ischoolie\.next\server\app\callback\route.js:1:3956)
+    at async k (D:\claude\ischoolie\.next\server\app\callback\route.js:1:7451) {
+  code: 'P1001',
+  meta: [Object],
+  clientVersion: '6.19.3'
+}
+prisma:error 
+Invalid `prisma.user.findFirst()` invocation:
+
+
+Can't reach database server at `127.0.0.1:5433`
+
+Please make sure your database server is running at `127.0.0.1:5433`.
+[AuthKit callback error] Error [PrismaClientKnownRequestError]: 
+Invalid `prisma.user.findFirst()` invocation:
+
+
+Can't reach database server at `127.0.0.1:5433`
+
+Please make sure your database server is running at `127.0.0.1:5433`.
+    at async l (D:\claude\ischoolie\.next\server\chunks\8201.js:1:2176)
+    at async onSuccess (D:\claude\ischoolie\.next\server\app\callback\route.js:1:4725)
+    at async N.returnPathname (D:\claude\ischoolie\.next\server\app\callback\route.js:1:3956)
+    at async k (D:\claude\ischoolie\.next\server\app\callback\route.js:1:7451) {
+  code: 'P1001',
+  meta: [Object],
+  clientVersion: '6.19.3'
+}
+prisma:error 
+Invalid `prisma.user.findFirst()` invocation:
+
+
+Can't reach database server at `127.0.0.1:5433`
+
+Please make sure your database server is running at `127.0.0.1:5433`.
+[AuthKit callback error] Error [PrismaClientKnownRequestError]: 
+Invalid `prisma.user.findFirst()` invocation:
+
+
+Can't reach database server at `127.0.0.1:5433`
+
+Please make sure your database server is running at `127.0.0.1:5433`.
+    at async l (D:\claude\ischoolie\.next\server\chunks\8201.js:1:2176)
+    at async onSuccess (D:\claude\ischoolie\.next\server\app\callback\route.js:1:4725)
+    at async N.returnPathname (D:\claude\ischoolie\.next\server\app\callback\route.js:1:3956)
+    at async k (D:\claude\ischoolie\.next\server\app\callback\route.js:1:7451) {
+  code: 'P1001',
+  meta: [Object],
+  clientVersion: '6.19.3'
+}
+prisma:error 
+Invalid `prisma.user.findFirst()` invocation:
+
+
+Can't reach database server at `127.0.0.1:5433`
+
+Please make sure your database server is running at `127.0.0.1:5433`.
+[AuthKit callback error] Error [PrismaClientKnownRequestError]: 
+Invalid `prisma.user.findFirst()` invocation:
+
+
+Can't reach database server at `127.0.0.1:5433`
+
+Please make sure your database server is running at `127.0.0.1:5433`.
+    at async l (D:\claude\ischoolie\.next\server\chunks\8201.js:1:2176)
+    at async onSuccess (D:\claude\ischoolie\.next\server\app\callback\route.js:1:4725)
+    at async N.returnPathname (D:\claude\ischoolie\.next\server\app\callback\route.js:1:3956)
+    at async k (D:\claude\ischoolie\.next\server\app\callback\route.js:1:7451) {
+  code: 'P1001',
+  meta: [Object],
+  clientVersion: '6.19.3'
+}
+prisma:error 
+Invalid `prisma.user.findFirst()` invocation:
+
+
+Can't reach database server at `127.0.0.1:5433`
+
+Please make sure your database server is running at `127.0.0.1:5433`.
+[AuthKit callback error] Error [PrismaClientKnownRequestError]: 
+Invalid `prisma.user.findFirst()` invocation:
+
+
+Can't reach database server at `127.0.0.1:5433`
+
+Please make sure your database server is running at `127.0.0.1:5433`.
+    at async l (D:\claude\ischoolie\.next\server\chunks\8201.js:1:2176)
+    at async onSuccess (D:\claude\ischoolie\.next\server\app\callback\route.js:1:4725)
+    at async N.returnPathname (D:\claude\ischoolie\.next\server\app\callback\route.js:1:3956)
+    at async k (D:\claude\ischoolie\.next\server\app\callback\route.js:1:7451) {
+  code: 'P1001',
+  meta: [Object],
+  clientVersion: '6.19.3'
+}
+prisma:error 
+Invalid `prisma.user.findFirst()` invocation:
+
+
+Can't reach database server at `127.0.0.1:5433`
+
+Please make sure your database server is running at `127.0.0.1:5433`.
+[AuthKit callback error] Error [PrismaClientKnownRequestError]: 
+Invalid `prisma.user.findFirst()` invocation:
+
+
+Can't reach database server at `127.0.0.1:5433`
+
+Please make sure your database server is running at `127.0.0.1:5433`.
+    at async l (D:\claude\ischoolie\.next\server\chunks\8201.js:1:2176)
+    at async onSuccess (D:\claude\ischoolie\.next\server\app\callback\route.js:1:4725)
+    at async N.returnPathname (D:\claude\ischoolie\.next\server\app\callback\route.js:1:3956)
+    at async k (D:\claude\ischoolie\.next\server\app\callback\route.js:1:7451) {
+  code: 'P1001',
+  meta: [Object],
+  clientVersion: '6.19.3'
+}
+prisma:error 
+Invalid `prisma.user.findFirst()` invocation:
+
+
+Can't reach database server at `127.0.0.1:5433`
+
+Please make sure your database server is running at `127.0.0.1:5433`.
+[AuthKit callback error] Error [PrismaClientKnownRequestError]: 
+Invalid `prisma.user.findFirst()` invocation:
+
+
+Can't reach database server at `127.0.0.1:5433`
+
+Please make sure your database server is running at `127.0.0.1:5433`.
+    at async l (D:\claude\ischoolie\.next\server\chunks\8201.js:1:2176)
+    at async onSuccess (D:\claude\ischoolie\.next\server\app\callback\route.js:1:4725)
+    at async N.returnPathname (D:\claude\ischoolie\.next\server\app\callback\route.js:1:3956)
+    at async k (D:\claude\ischoolie\.next\server\app\callback\route.js:1:7451) {
+  code: 'P1001',
+  meta: [Object],
+  clientVersion: '6.19.3'
+}
+prisma:error 
+Invalid `prisma.user.findFirst()` invocation:
+
+
+Can't reach database server at `127.0.0.1:5433`
+
+Please make sure your database server is running at `127.0.0.1:5433`.
+[AuthKit callback error] Error [PrismaClientKnownRequestError]: 
+Invalid `prisma.user.findFirst()` invocation:
+
+
+Can't reach database server at `127.0.0.1:5433`
+
+Please make sure your database server is running at `127.0.0.1:5433`.
+    at async l (D:\claude\ischoolie\.next\server\chunks\8201.js:1:2176)
+    at async onSuccess (D:\claude\ischoolie\.next\server\app\callback\route.js:1:4725)
+    at async N.returnPathname (D:\claude\ischoolie\.next\server\app\callback\route.js:1:3956)
+    at async k (D:\claude\ischoolie\.next\server\app\callback\route.js:1:7451) {
+  code: 'P1001',
+  meta: [Object],
+  clientVersion: '6.19.3'
+}
+prisma:error 
+Invalid `prisma.user.findFirst()` invocation:
+
+
+Can't reach database server at `127.0.0.1:5433`
+
+Please make sure your database server is running at `127.0.0.1:5433`.
+[AuthKit callback error] Error [PrismaClientKnownRequestError]: 
+Invalid `prisma.user.findFirst()` invocation:
+
+
+Can't reach database server at `127.0.0.1:5433`
+
+Please make sure your database server is running at `127.0.0.1:5433`.
+    at async l (D:\claude\ischoolie\.next\server\chunks\8201.js:1:2176)
+    at async onSuccess (D:\claude\ischoolie\.next\server\app\callback\route.js:1:4725)
+    at async N.returnPathname (D:\claude\ischoolie\.next\server\app\callback\route.js:1:3956)
+    at async k (D:\claude\ischoolie\.next\server\app\callback\route.js:1:7451) {
+  code: 'P1001',
+  meta: [Object],
+  clientVersion: '6.19.3'
+}
+prisma:error 
+Invalid `prisma.user.findFirst()` invocation:
+
+
+Can't reach database server at `127.0.0.1:5433`
+
+Please make sure your database server is running at `127.0.0.1:5433`.
+[AuthKit callback error] Error [PrismaClientKnownRequestError]: 
+Invalid `prisma.user.findFirst()` invocation:
+
+
+Can't reach database server at `127.0.0.1:5433`
+
+Please make sure your database server is running at `127.0.0.1:5433`.
+    at async l (D:\claude\ischoolie\.next\server\chunks\8201.js:1:2176)
+    at async onSuccess (D:\claude\ischoolie\.next\server\app\callback\route.js:1:4725)
+    at async N.returnPathname (D:\claude\ischoolie\.next\server\app\callback\route.js:1:3956)
+    at async k (D:\claude\ischoolie\.next\server\app\callback\route.js:1:7451) {
+  code: 'P1001',
+  meta: [Object],
+  clientVersion: '6.19.3'
+}

@@ -39,7 +39,7 @@ function WorkspaceScreen() {
     try {
       // Remembering the workspace is a convenience preference only. It never
       // confers permission: the destination page re-checks membership.
-      await setActiveWorkspace(user.uid, workspace.id);
+      await setActiveWorkspace(workspace.id);
     } catch {
       toast({ title: 'Preference not saved', description: 'Opening the workspace anyway.', variant: 'warning' });
     }

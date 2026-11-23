@@ -63,7 +63,7 @@ test.describe('login page', () => {
   test('ignores an external redirect target', async ({ page }) => {
     await page.goto('/login?next=https://evil.example/steal');
     const createAccount = page.getByRole('link', { name: 'Create account' });
-    await expect(createAccount).toHaveAttribute('href', /^\/signup\?next=%2Fdashboard$/);
+    await expect(createAccount).toHaveAttribute('href', /^\/signup\?next=%2Ffeed$/);
   });
 });
 

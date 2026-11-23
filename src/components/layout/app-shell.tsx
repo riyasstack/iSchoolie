@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import {
   BookOpen,
   Building2,
@@ -40,7 +40,6 @@ export function AppShell({
 }) {
   const { profile, workspaces, platformAdmin, roles, signOut } = useAuth();
   const pathname = usePathname();
-  const router = useRouter();
   const [open, setOpen] = React.useState(false);
   const [menuOpen, setMenuOpen] = React.useState(false);
 
@@ -50,7 +49,7 @@ export function AppShell({
   }, [pathname]);
 
   const primary: NavItem[] = [
-    { href: '/dashboard', label: 'Overview', icon: <LayoutDashboard className="h-4 w-4" /> },
+    { href: '/feed', label: 'Feed', icon: <LayoutDashboard className="h-4 w-4" /> },
     {
       href: '/dashboard/student',
       label: 'Learning',
@@ -94,7 +93,7 @@ export function AppShell({
     items
       .filter((item) => !item.hidden)
       .map((item) => {
-        const active = pathname === item.href || (item.href !== '/dashboard' && pathname?.startsWith(`${item.href}/`));
+        const active = pathname === item.href || (item.href !== '/feed' && pathname?.startsWith(`${item.href}/`));
         return (
           <Link
             key={item.href}
@@ -116,7 +115,7 @@ export function AppShell({
   const sidebar = (
     <div className="flex h-full flex-col gap-6 p-4">
       <div className="px-1">
-        <Logo href="/dashboard" size="sm" />
+        <Logo href="/feed" size="sm" />
       </div>
       <nav aria-label="Main" className="flex-1 space-y-6 overflow-y-auto">
         <div className="space-y-1">{nav(primary)}</div>
@@ -224,9 +223,8 @@ export function AppShell({
                         type="button"
                         role="menuitem"
                         className="flex w-full items-center gap-2 border-t border-line px-3 py-2 text-left text-sm text-danger hover:bg-mutedSurface"
-                        onClick={async () => {
-                          await signOut();
-                          router.replace('/login');
+                        onClick={() => {
+                          void signOut();
                         }}
                       >
                         <LogOut aria-hidden="true" className="h-4 w-4" /> Sign out

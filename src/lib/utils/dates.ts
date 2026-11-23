@@ -39,9 +39,18 @@ export function formatDate(iso: string | null | undefined): string {
   return new Intl.DateTimeFormat('en', { day: 'numeric', month: 'short', year: 'numeric' }).format(date);
 }
 
-export function formatDateTime(value: Date | { toDate(): Date } | null | undefined): string {
+/** Accepts Firestore Timestamps, Dates and ISO strings from the API. */
+export type DateLike = Date | string | { toDate(): Date };
+
+function resolveDate(value: DateLike): Date {
+  if (value instanceof Date) return value;
+  if (typeof value === 'string') return new Date(value);
+  return value.toDate();
+}
+
+export function formatDateTime(value: DateLike | null | undefined): string {
   if (!value) return '—';
-  const date = value instanceof Date ? value : value.toDate();
+  const date = resolveDate(value);
   if (Number.isNaN(date.getTime())) return '—';
   return new Intl.DateTimeFormat('en', {
     day: 'numeric',
@@ -52,9 +61,9 @@ export function formatDateTime(value: Date | { toDate(): Date } | null | undefin
   }).format(date);
 }
 
-export function relativeTime(value: Date | { toDate(): Date } | null | undefined): string {
+export function relativeTime(value: DateLike | null | undefined): string {
   if (!value) return '—';
-  const date = value instanceof Date ? value : value.toDate();
+  const date = resolveDate(value);
   const diff = date.getTime() - Date.now();
   const abs = Math.abs(diff);
   const units: [Intl.RelativeTimeFormatUnit, number][] = [

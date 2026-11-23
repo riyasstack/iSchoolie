@@ -1,0 +1,1326 @@
+// iSchoolie — Postgres schema (replaces Firebase Firestore).
+//
+// Derived from the document models in src/lib/models/*. Firestore collections
+// map 1:1 to tables; document ids become text primary keys (cuid when the app
+// does not supply one) and denormalised display names are kept as columns
+// because the UI reads them without joining.
+//
+// Access control moves from firestore.rules to server-side checks: every read
+// and write goes through a route handler that resolves the WorkOS identity
+// first. Fields that were "private by subcollection" in Firestore become
+// separate tables so a query can never leak them by accident.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/**
+ * ============================== Identity ==============================
+ */
+
+enum UserStatus {
+  active
+  suspended
+  pending_deletion
+}
+
+enum RoleKey {
+  student_school
+  student_college
+  teacher
+  parent
+  institution_admin
+}
+
+enum StudentLevel {
+  school
+  college
+}
+
+enum TeacherVerificationStatus {
+  not_submitted
+  pending
+  verified
+  rejected
+  suspended
+}
+
+/// WorkOS is the only credential store. `workosUserId` is the identity key;
+/// email is mirrored for display and support lookups.
+model User {
+  id           String     @id @default(cuid())
+  workosUserId String     @unique
+  email        String     @unique
+  displayName  String
+  handle       String     @unique
+  photoUrl     String?
+  headline     String?
+  country      String?
+  status       UserStatus @default(active)
+
+  /// Replaces the `platformAdmin` custom claim: a database column is auditable
+  /// and cannot be minted by a client.
+  platformAdmin Boolean @default(false)
+
+  // Onboarding
+  onboarded     Boolean   @default(false)
+  selectedRoles RoleKey[]
+  onboardedAt   DateTime?
+
+  activeWorkspace String?
+  studentLevel    StudentLevel?
+
+  // Teacher public info
+  teacherSubjects        String[]
+  teacherLevels          String[]
+  teacherExperience      Int      @default(0)
+  teacherBio             String   @default("")
+  teacherQualification   String?
+  teacherInstitutionName String?
+
+  // Safeguarding
+  isMinor                   Boolean   @default(false)
+  privateProfile            Boolean   @default(true)
+  messagingEnabled          Boolean   @default(false)
+  guardianConsentRecordedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  privateProfileRecord UserPrivate?
+  roles                UserRoles?
+  roleRequests         RoleRequest[]
+  notifications        Notification[]
+  dashboardSummary     DashboardSummary?
+  teacherVerification  TeacherVerification?
+
+  memberships             InstitutionMember[]
+  teachingClasses         Class[]             @relation("ClassTeacher")
+  submissions             Submission[]
+  grades                  Grade[]             @relation("GradeStudent")
+  coursesTaught           Course[]
+  courseEnrollments       CourseEnrollment[]
+  classEnrollments        ClassEnrollment[]
+  communityMemberships    CommunityMember[]
+  posts                   Post[]
+  comments                Comment[]
+  guardianLinksAsGuardian GuardianLink[]      @relation("Guardian")
+  guardianLinksAsStudent  GuardianLink[]      @relation("Student")
+  institutionsOwned       Institution[]       @relation("InstitutionOwner")
+
+  // Social network (Instagram/*social_* tables). Kept in separate tables so a
+  // social follow or reaction can never grant access to institutional records.
+  socialProfile            SocialProfile?
+  discoverability          DiscoverabilityPreference?
+  onboardingProgress       OnboardingProgress?
+  socialInterests          UserInterest[]
+  socialGoals              UserGoal[]
+  topicFollows             TopicFollow[]
+  socialPosts              SocialPost[]                  @relation("PostAuthor")
+  socialFollows            SocialFollow[]                @relation("Follower")
+  socialFollowers          SocialFollow[]                @relation("Following")
+  blocksIssued             UserBlock[]                   @relation("Blocker")
+  blocksReceived           UserBlock[]                   @relation("Blocked")
+  mutesIssued              UserMute[]                    @relation("Muter")
+  mutesReceived            UserMute[]                    @relation("Muted")
+  socialReactions          SocialReaction[]
+  socialReposts            SocialRepost[]
+  socialBookmarks          SocialBookmark[]
+  socialNotifications      SocialNotification[]          @relation("NotificationRecipient")
+  socialNotificationsBy    SocialNotification[]          @relation("NotificationActor")
+  socialReportsFiled       SocialReport[]                @relation("Reporter")
+  moderationActions        SocialModerationAction[]      @relation("ModerationActor")
+  recommendationDismissals RecommendationDismissal[]
+  recommendationFeedback   RecommendationFeedback[]      @relation("FeedbackGiver")
+  mediaAssets              SocialMediaAsset[]
+  notificationPreference   SocialNotificationPreference?
+  socialLists              SocialList[]
+  socialListMemberships    SocialListMember[]
+  socialListFollows        SocialListFollow[]
+  socialInvitations        SocialInvitation[]
+  postMentions             SocialPostMention[]
+  securityAuditEvents      SecurityAuditEvent[]
+
+  @@index([status])
+  @@map("users")
+}
+
+/// Was `users/{uid}/private/profile`. Private contact and academic detail.
+model UserPrivate {
+  userId            String   @id
+  email             String
+  dateOfBirth       String?
+  schoolName        String?
+  grade             Int?
+  collegeName       String?
+  degree            String?
+  department        String?
+  academicStage     String?
+  learningInterests String[]
+  guardianEmail     String?
+
+  termsVersion           String
+  privacyVersion         String
+  acceptedTermsAt        DateTime?
+  acceptedPrivacyAt      DateTime?
+  guardianAcknowledgedAt DateTime?
+
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_private_profiles")
+}
+
+/// Was `userRoles/{uid}`. Three explicit buckets instead of custom claims.
+model UserRoles {
+  userId       String    @id
+  selfDeclared RoleKey[]
+  granted      RoleKey[]
+  revoked      RoleKey[]
+  updatedAt    DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_roles")
+}
+
+/// Was `users/{uid}/roleRequests/{roleKey}` — reviewable audit trail only.
+model RoleRequest {
+  id          String   @id @default(cuid())
+  userId      String
+  role        RoleKey
+  note        String?
+  requestedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, role])
+  @@map("role_requests")
+}
+
+model TeacherVerification {
+  userId    String                    @id
+  status    TeacherVerificationStatus @default(not_submitted)
+  note      String?
+  decidedAt DateTime?
+  updatedAt DateTime                  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("teacher_verifications")
+}
+
+/// Was `users/{uid}/summaries/overview` — a cache, never authoritative.
+model DashboardSummary {
+  userId                 String   @id
+  studentAssignmentCount Int      @default(0)
+  teacherClassCount      Int      @default(0)
+  guardianChildCount     Int      @default(0)
+  updatedAt              DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("dashboard_summaries")
+}
+
+enum NotificationType {
+  assignment
+  grade
+  institution
+  guardian
+  system
+  moderation
+}
+
+/// Was `users/{uid}/notifications/{id}`.
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  body      String
+  href      String?
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("notifications")
+}
+
+/**
+ * ============================ Institutions ============================
+ */
+
+enum InstitutionCategory {
+  school
+  college
+  university
+  coaching_centre
+  training_institution
+}
+
+enum InstitutionApplicationStatus {
+  draft
+  submitted
+  under_review
+  more_information_required
+  approved
+  rejected
+}
+
+enum InstitutionStatus {
+  active
+  suspended
+}
+
+enum InstitutionMemberRole {
+  owner
+  admin
+  teacher
+  staff
+}
+
+enum InstitutionMemberStatus {
+  active
+  revoked
+}
+
+model Institution {
+  id                  String              @id @default(cuid())
+  name                String
+  slug                String              @unique
+  category            InstitutionCategory
+  officialEmail       String
+  website             String?
+  country             String
+  city                String
+  status              InstitutionStatus   @default(active)
+  ownerUserId         String
+  sourceApplicationId String?
+  createdAt           DateTime            @default(now())
+  approvedAt          DateTime            @default(now())
+  approvedBy          String
+
+  owner       User                @relation("InstitutionOwner", fields: [ownerUserId], references: [id])
+  members     InstitutionMember[]
+  classes     Class[]
+  courses     Course[]
+  communities Community[]
+
+  @@index([status])
+  @@map("institutions")
+}
+
+/// Was `institutions/{instId}/members/{uid}` — the authoritative access record.
+model InstitutionMember {
+  id              String                  @id @default(cuid())
+  institutionId   String
+  userId          String
+  institutionName String
+  displayName     String
+  email           String
+  role            InstitutionMemberRole
+  status          InstitutionMemberStatus @default(active)
+  addedBy         String
+  addedAt         DateTime                @default(now())
+  revokedAt       DateTime?
+
+  institution Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([institutionId, userId])
+  @@index([userId, status])
+  @@map("institution_members")
+}
+
+model InstitutionApplication {
+  id                 String              @id @default(cuid())
+  applicantUserId    String
+  institutionName    String
+  category           InstitutionCategory
+  officialEmail      String
+  contactName        String
+  contactDesignation String
+  contactPhone       String
+  website            String?
+  country            String
+  city               String
+  registrationInfo   String?
+
+  declaredAuthorized Boolean @default(false)
+  declaredAccurate   Boolean @default(false)
+  declaredTerms      Boolean @default(false)
+
+  status        InstitutionApplicationStatus @default(draft)
+  submittedAt   DateTime?
+  reviewerUid   String?
+  reviewNote    String?
+  institutionId String?
+  createdAt     DateTime                     @default(now())
+  updatedAt     DateTime                     @updatedAt
+
+  events InstitutionApplicationEvent[]
+
+  @@index([status])
+  @@index([applicantUserId])
+  @@map("institution_applications")
+}
+
+/// Append-only review trail. Was a client-unwritable subcollection.
+model InstitutionApplicationEvent {
+  id            String   @id @default(cuid())
+  applicationId String
+  action        String
+  actorUid      String
+  actorKind     String
+  note          String?
+  createdAt     DateTime @default(now())
+
+  application InstitutionApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId, createdAt])
+  @@map("institution_application_events")
+}
+
+/**
+ * ============================== Guardians ==============================
+ */
+
+enum GuardianLinkStatus {
+  requested
+  pending_verification
+  approved
+  rejected
+  revoked
+  expired
+}
+
+enum GuardianRelationship {
+  mother
+  father
+  legal_guardian
+  grandparent
+  sibling
+  other
+}
+
+model GuardianLink {
+  id           String               @id @default(cuid())
+  guardianId   String
+  guardianName String
+  studentId    String
+  studentName  String
+  relationship GuardianRelationship
+  status       GuardianLinkStatus   @default(requested)
+
+  requestedBy        String
+  requestedAt        DateTime  @default(now())
+  studentConfirmedAt DateTime?
+  verifiedBy         String?
+  verifiedAt         DateTime?
+  revokedBy          String?
+  revokedAt          DateTime?
+  note               String?
+  expiresAt          DateTime?
+
+  consentAcademic      Boolean @default(false)
+  consentAttendance    Boolean @default(false)
+  consentAnnouncements Boolean @default(false)
+
+  guardian User @relation("Guardian", fields: [guardianId], references: [id], onDelete: Cascade)
+  student  User @relation("Student", fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([guardianId, studentId])
+  @@index([studentId, status])
+  @@map("guardian_links")
+}
+
+/**
+ * ============================== Academics ==============================
+ */
+
+enum ClassRole {
+  student
+  assistant
+}
+
+model Class {
+  id              String   @id @default(cuid())
+  institutionId   String
+  institutionName String
+  name            String
+  subject         String
+  level           String
+  term            String
+  teacherId       String
+  teacherName     String
+  joinCode        String   @unique
+  allowSelfEnroll Boolean  @default(true)
+  archived        Boolean  @default(false)
+  memberCount     Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  institution Institution       @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  teacher     User              @relation("ClassTeacher", fields: [teacherId], references: [id])
+  enrollments ClassEnrollment[]
+  assignments Assignment[]
+
+  @@index([institutionId])
+  @@index([teacherId])
+  @@map("classes")
+}
+
+model ClassEnrollment {
+  id          String    @id @default(cuid())
+  classId     String
+  userId      String
+  displayName String
+  role        ClassRole @default(student)
+  addedAt     DateTime  @default(now())
+
+  class Class @relation(fields: [classId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([classId, userId])
+  @@index([userId])
+  @@map("class_enrollments")
+}
+
+enum AssignmentStatus {
+  draft
+  published
+  closed
+}
+
+model Assignment {
+  id                  String           @id @default(cuid())
+  classId             String
+  institutionId       String
+  title               String
+  instructions        String           @default("")
+  dueAt               DateTime?
+  maxScore            Int              @default(100)
+  allowLateSubmission Boolean          @default(false)
+  status              AssignmentStatus @default(draft)
+  createdBy           String
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+
+  class       Class        @relation(fields: [classId], references: [id], onDelete: Cascade)
+  submissions Submission[]
+  grades      Grade[]
+
+  @@index([classId, status])
+  @@map("assignments")
+}
+
+enum SubmissionStatus {
+  submitted
+  withdrawn
+}
+
+/// One row per student per assignment — replaces the `submissions/{uid}` docs.
+model Submission {
+  id           String           @id @default(cuid())
+  assignmentId String
+  studentId    String
+  studentName  String
+  content      String           @default("")
+  submittedAt  DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  status       SubmissionStatus @default(submitted)
+  attempt      Int              @default(1)
+
+  assignment Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  student    User       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([assignmentId, studentId])
+  @@index([studentId])
+  @@map("submissions")
+}
+
+/// Grades are a separate table so a student can never write their own score.
+model Grade {
+  id           String    @id @default(cuid())
+  assignmentId String
+  studentId    String
+  score        Int
+  maxScore     Int
+  feedback     String    @default("")
+  published    Boolean   @default(false)
+  gradedBy     String
+  gradedAt     DateTime  @default(now())
+  publishedAt  DateTime?
+
+  // Denormalised so an authorised guardian can render a result without
+  // reading the assignment.
+  assignmentTitle String
+  classId         String
+  institutionId   String
+
+  assignment Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  student    User       @relation("GradeStudent", fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([assignmentId, studentId])
+  @@index([studentId, published])
+  @@map("grades")
+}
+
+/**
+ * =============================== Courses ===============================
+ */
+
+enum CourseStatus {
+  draft
+  published
+  archived
+}
+
+enum CourseVisibility {
+  public
+  institution
+}
+
+model Course {
+  id              String           @id @default(cuid())
+  title           String
+  summary         String           @default("")
+  subject         String
+  level           String
+  teacherId       String
+  teacherName     String
+  teacherVerified Boolean          @default(false)
+  institutionId   String?
+  visibility      CourseVisibility @default(public)
+  status          CourseStatus     @default(draft)
+  enrollCount     Int              @default(0)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  teacher     User               @relation(fields: [teacherId], references: [id])
+  institution Institution?       @relation(fields: [institutionId], references: [id])
+  enrollments CourseEnrollment[]
+  lessons     CourseLesson[]
+
+  @@index([status, visibility])
+  @@map("courses")
+}
+
+model CourseEnrollment {
+  id          String   @id @default(cuid())
+  courseId    String
+  userId      String
+  displayName String
+  enrolledAt  DateTime @default(now())
+
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, userId])
+  @@index([userId])
+  @@map("course_enrollments")
+}
+
+model CourseLesson {
+  id        String   @id @default(cuid())
+  courseId  String
+  title     String
+  content   String   @default("")
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([courseId, position])
+  @@map("course_lessons")
+}
+
+/**
+ * ============================= Communities =============================
+ */
+
+enum CommunityVisibility {
+  public
+  institution
+}
+
+model Community {
+  id            String              @id @default(cuid())
+  name          String
+  slug          String              @unique
+  description   String              @default("")
+  visibility    CommunityVisibility @default(public)
+  institutionId String?
+  createdBy     String
+  memberCount   Int                 @default(0)
+  postCount     Int                 @default(0)
+  createdAt     DateTime            @default(now())
+
+  institution Institution?      @relation(fields: [institutionId], references: [id])
+  members     CommunityMember[]
+  posts       Post[]
+
+  @@map("communities")
+}
+
+model CommunityMember {
+  id          String   @id @default(cuid())
+  communityId String
+  userId      String
+  displayName String
+  joinedAt    DateTime @default(now())
+
+  community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([communityId, userId])
+  @@index([userId])
+  @@map("community_members")
+}
+
+enum PostStatus {
+  visible
+  hidden
+  removed
+}
+
+model Post {
+  id           String     @id @default(cuid())
+  communityId  String
+  authorId     String
+  authorName   String
+  body         String
+  status       PostStatus @default(visible)
+  commentCount Int        @default(0)
+  likeCount    Int        @default(0)
+  createdAt    DateTime   @default(now())
+
+  community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments  Comment[]
+
+  @@index([communityId, createdAt(sort: Desc)])
+  @@map("posts")
+}
+
+model Comment {
+  id         String   @id @default(cuid())
+  postId     String
+  authorId   String
+  authorName String
+  body       String
+  createdAt  DateTime @default(now())
+
+  post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([postId, createdAt])
+  @@map("comments")
+}
+
+/**
+ * ============================== Moderation =============================
+ */
+
+enum ReportTargetType {
+  post
+  comment
+  user
+  message
+}
+
+enum ReportStatus {
+  open
+  reviewing
+  actioned
+  dismissed
+}
+
+model Report {
+  id            String           @id @default(cuid())
+  reporterId    String
+  targetType    ReportTargetType
+  targetPath    String
+  targetOwnerId String?
+  reason        String
+  details       String?
+  status        ReportStatus     @default(open)
+  handledBy     String?
+  handledAt     DateTime?
+  action        String?
+  createdAt     DateTime         @default(now())
+
+  @@index([status, createdAt])
+  @@map("reports")
+}
+
+/// Was `auditLogs/{id}` — server-writable only.
+model AuditLog {
+  id          String   @id @default(cuid())
+  action      String
+  actorUid    String
+  actorKind   String
+  subjectType String
+  subjectId   String
+  detail      String   @default("")
+  metadata    Json     @default("{}")
+  createdAt   DateTime @default(now())
+
+  // No foreign key: actors can be the Admin CLI or the system, not just users.
+  @@index([actorUid])
+  @@index([createdAt(sort: Desc)])
+  @@index([subjectType, subjectId])
+  @@map("audit_logs")
+}
+
+/**
+ * ==========================================================================
+ * Social network (milestone 1)
+ * These tables are deliberately separate from the institutional tables above.
+ * A social relationship must never become an authorisation for grades,
+ * attendance, fees, guardian data or institution-only announcements.
+ * ==========================================================================
+ */
+
+enum SocialAudience {
+  public
+  followers
+  private
+}
+
+enum FollowStatus {
+  active
+  pending
+}
+
+enum EducationStage {
+  school_student
+  college_student
+  teacher
+  education_professional
+  parent
+  lifelong_learner
+}
+
+enum MediaKind {
+  image
+  video
+  document
+}
+
+enum SocialNotificationType {
+  follow
+  follow_request
+  follow_accepted
+  reaction
+  reply
+  mention
+  repost
+  quote
+  moderation
+  invitation
+}
+
+enum SocialReportTargetType {
+  post
+  reply
+  user
+}
+
+enum SocialListVisibility {
+  public
+  private
+}
+
+enum InvitationStatus {
+  created
+  sent
+  accepted
+  revoked
+}
+
+/// Public social profile. Never holds date of birth, address or academic records.
+model SocialProfile {
+  userId            String          @id
+  bio               String          @default("")
+  coverUrl          String?
+  website           String?
+  /// Coarse, user-entered region (city / state). Never an exact address.
+  region            String?
+  educationStage    EducationStage?
+  professionalFocus String[]        @default([])
+  skills            String[]        @default([])
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("social_profiles")
+}
+
+/// Discoverability is its own record so the product can evolve without moving
+/// privacy choices into the public profile row.
+model DiscoverabilityPreference {
+  userId              String   @id
+  discoverable        Boolean  @default(true)
+  recommendable       Boolean  @default(true)
+  discoverByEmail     Boolean  @default(false)
+  discoverByPhone     Boolean  @default(false)
+  showEducation       Boolean  @default(true)
+  showFollowers       Boolean  @default(true)
+  showFollowing       Boolean  @default(true)
+  allowSearchIndexing Boolean  @default(true)
+  updatedAt           DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("discoverability_preferences")
+}
+
+/// Resumable onboarding. Date of birth is written to `user_private_profiles`,
+/// never here, so progress rows are safe to join for UI counts.
+model OnboardingProgress {
+  userId         String          @id
+  step           Int             @default(1)
+  completedSteps String[]        @default([])
+  educationStage EducationStage?
+  goals          String[]        @default([])
+  interests      String[]        @default([])
+  connectDone    Boolean         @default(false)
+  inviteSkipped  Boolean         @default(false)
+  completed      Boolean         @default(false)
+  completedAt    DateTime?
+  updatedAt      DateTime        @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("onboarding_progress")
+}
+
+model Topic {
+  id            String   @id @default(cuid())
+  slug          String   @unique
+  name          String   @unique
+  description   String   @default("")
+  category      String   @default("General")
+  followerCount Int      @default(0)
+  postCount     Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  interests  UserInterest[]
+  followers  TopicFollow[]
+  postTopics SocialPostTopic[]
+
+  @@index([category])
+  @@map("topics")
+}
+
+model UserInterest {
+  userId    String
+  topicId   String
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topic Topic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@id([userId, topicId])
+  @@index([topicId])
+  @@map("user_interests")
+}
+
+model UserGoal {
+  userId    String
+  goal      String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, goal])
+  @@map("user_goals")
+}
+
+model TopicFollow {
+  userId    String
+  topicId   String
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topic Topic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@id([userId, topicId])
+  @@index([topicId])
+  @@map("topic_follows")
+}
+
+/// A follow and a pending follow request are the same edge with a status.
+/// Keeping one row avoids contradictory copies of the same relationship.
+model SocialFollow {
+  id          String       @id @default(cuid())
+  followerId  String
+  followingId String
+  status      FollowStatus @default(active)
+  createdAt   DateTime     @default(now())
+  acceptedAt  DateTime?
+
+  follower  User @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@index([followingId, status])
+  @@index([followerId, status])
+  @@map("social_follows")
+}
+
+model UserBlock {
+  blockerId String
+  blockedId String
+  createdAt DateTime @default(now())
+
+  blocker User @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked User @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@id([blockerId, blockedId])
+  @@index([blockedId])
+  @@map("user_blocks")
+}
+
+model UserMute {
+  muterId   String
+  mutedId   String
+  createdAt DateTime @default(now())
+
+  muter User @relation("Muter", fields: [muterId], references: [id], onDelete: Cascade)
+  muted User @relation("Muted", fields: [mutedId], references: [id], onDelete: Cascade)
+
+  @@id([muterId, mutedId])
+  @@index([mutedId])
+  @@map("user_mutes")
+}
+
+model SocialPost {
+  id          String         @id @default(cuid())
+  authorId    String
+  body        String         @default("")
+  audience    SocialAudience @default(public)
+  status      PostStatus     @default(visible)
+  replyToId   String?
+  rootId      String?
+  quoteOfId   String?
+  likeCount   Int            @default(0)
+  replyCount  Int            @default(0)
+  repostCount Int            @default(0)
+  quoteCount  Int            @default(0)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  editedAt    DateTime?
+
+  author  User         @relation("PostAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  replyTo SocialPost?  @relation("Replies", fields: [replyToId], references: [id], onDelete: Cascade)
+  replies SocialPost[] @relation("Replies")
+  quoteOf SocialPost?  @relation("Quotes", fields: [quoteOfId], references: [id], onDelete: SetNull)
+  quotes  SocialPost[] @relation("Quotes")
+
+  media         SocialPostMedia[]
+  topics        SocialPostTopic[]
+  hashtags      SocialPostHashtag[]
+  mentions      SocialPostMention[]
+  reactions     SocialReaction[]
+  reposts       SocialRepost[]
+  bookmarks     SocialBookmark[]
+  notifications SocialNotification[]
+
+  @@index([authorId, createdAt(sort: Desc)])
+  @@index([audience, status, createdAt(sort: Desc)])
+  @@index([replyToId, createdAt])
+  @@index([rootId, createdAt])
+  @@map("social_posts")
+}
+
+model SocialMediaAsset {
+  id         String    @id @default(cuid())
+  ownerId    String
+  kind       MediaKind
+  storageKey String
+  mimeType   String
+  sizeBytes  Int
+  altText    String?   @db.VarChar(400)
+  createdAt  DateTime  @default(now())
+
+  owner User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  posts SocialPostMedia[]
+
+  @@index([ownerId, createdAt])
+  @@map("social_media_assets")
+}
+
+model SocialPostMedia {
+  postId   String
+  assetId  String
+  position Int    @default(0)
+
+  post  SocialPost       @relation(fields: [postId], references: [id], onDelete: Cascade)
+  asset SocialMediaAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@id([postId, assetId])
+  @@index([assetId])
+  @@map("social_post_media")
+}
+
+model SocialPostTopic {
+  postId  String
+  topicId String
+
+  post  SocialPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  topic Topic      @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@id([postId, topicId])
+  @@index([topicId])
+  @@map("social_post_topics")
+}
+
+model SocialPostHashtag {
+  postId String
+  tag    String
+
+  post SocialPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@id([postId, tag])
+  @@index([tag])
+  @@map("social_post_hashtags")
+}
+
+model SocialPostMention {
+  postId          String
+  mentionedUserId String
+
+  post    SocialPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  mention User       @relation(fields: [mentionedUserId], references: [id], onDelete: Cascade)
+
+  @@id([postId, mentionedUserId])
+  @@index([mentionedUserId])
+  @@map("social_post_mentions")
+}
+
+model SocialReaction {
+  postId    String
+  userId    String
+  kind      String   @default("like")
+  createdAt DateTime @default(now())
+
+  post SocialPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([postId, userId])
+  @@index([userId, createdAt])
+  @@map("social_reactions")
+}
+
+model SocialRepost {
+  postId    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  post SocialPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([postId, userId])
+  @@index([userId, createdAt])
+  @@map("social_reposts")
+}
+
+model SocialBookmark {
+  postId    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  post SocialPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([postId, userId])
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("social_bookmarks")
+}
+
+model SocialNotification {
+  id          String                 @id @default(cuid())
+  recipientId String
+  actorId     String?
+  type        SocialNotificationType
+  postId      String?
+  title       String
+  body        String                 @default("")
+  href        String?
+  read        Boolean                @default(false)
+  createdAt   DateTime               @default(now())
+
+  recipient User        @relation("NotificationRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  actor     User?       @relation("NotificationActor", fields: [actorId], references: [id], onDelete: SetNull)
+  post      SocialPost? @relation(fields: [postId], references: [id], onDelete: SetNull)
+
+  @@index([recipientId, createdAt(sort: Desc)])
+  @@index([recipientId, read])
+  @@map("social_notifications")
+}
+
+model SocialNotificationPreference {
+  userId     String   @id
+  follows    Boolean  @default(true)
+  reactions  Boolean  @default(true)
+  replies    Boolean  @default(true)
+  mentions   Boolean  @default(true)
+  reposts    Boolean  @default(true)
+  quotes     Boolean  @default(true)
+  moderation Boolean  @default(true)
+  updatedAt  DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("social_notification_preferences")
+}
+
+model SocialReport {
+  id            String                 @id @default(cuid())
+  reporterId    String
+  targetType    SocialReportTargetType
+  targetId      String
+  targetOwnerId String?
+  reason        String
+  details       String?
+  status        ReportStatus           @default(open)
+  handledBy     String?
+  handledAt     DateTime?
+  action        String?
+  createdAt     DateTime               @default(now())
+
+  reporter User @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt])
+  @@index([targetType, targetId])
+  @@map("social_reports")
+}
+
+model SocialModerationAction {
+  id        String   @id @default(cuid())
+  reportId  String?
+  actorId   String
+  action    String
+  note      String   @default("")
+  createdAt DateTime @default(now())
+
+  actor User @relation("ModerationActor", fields: [actorId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt(sort: Desc)])
+  @@map("social_moderation_actions")
+}
+
+model RecommendationDismissal {
+  userId       String
+  targetUserId String
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, targetUserId])
+  @@index([userId, createdAt])
+  @@map("recommendation_dismissals")
+}
+
+model RecommendationFeedback {
+  id           String   @id @default(cuid())
+  userId       String
+  targetUserId String
+  signal       String
+  createdAt    DateTime @default(now())
+
+  user User @relation("FeedbackGiver", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("recommendation_feedback")
+}
+
+model SocialInvitation {
+  id         String           @id @default(cuid())
+  inviterId  String
+  email      String?
+  token      String           @unique
+  channel    String           @default("link")
+  status     InvitationStatus @default(created)
+  note       String?
+  createdAt  DateTime         @default(now())
+  sentAt     DateTime?
+  acceptedAt DateTime?
+
+  inviter User @relation(fields: [inviterId], references: [id], onDelete: Cascade)
+
+  @@index([inviterId, createdAt(sort: Desc)])
+  @@map("social_invitations")
+}
+
+model SocialList {
+  id          String               @id @default(cuid())
+  ownerId     String
+  name        String
+  description String               @default("")
+  visibility  SocialListVisibility @default(private)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  owner   User               @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  members SocialListMember[]
+  follows SocialListFollow[]
+
+  @@index([ownerId, createdAt])
+  @@map("social_lists")
+}
+
+model SocialListMember {
+  listId  String
+  userId  String
+  addedAt DateTime @default(now())
+
+  list SocialList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  user User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([listId, userId])
+  @@index([userId])
+  @@map("social_list_members")
+}
+
+model SocialListFollow {
+  listId     String
+  followerId String
+  createdAt  DateTime @default(now())
+
+  list     SocialList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  follower User       @relation(fields: [followerId], references: [id], onDelete: Cascade)
+
+  @@id([listId, followerId])
+  @@index([followerId])
+  @@map("social_list_follows")
+}
+
+/// Append-only security trail for sensitive social actions.
+model SecurityAuditEvent {
+  id          String   @id @default(cuid())
+  actorId     String?
+  action      String
+  subjectType String
+  subjectId   String
+  detail      String   @default("")
+  createdAt   DateTime @default(now())
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt(sort: Desc)])
+  @@index([subjectType, subjectId])
+  @@map("security_audit_events")
+}

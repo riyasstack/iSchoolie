@@ -38,7 +38,7 @@ function AccessDeniedScreen() {
                 Security Rules deny the underlying read as well, so no protected data is disclosed.
               </p>
               <div className="mt-6 flex flex-wrap justify-center gap-2">
-                <Link href="/dashboard" className={buttonClass('primary', 'sm')}>
+                <Link href="/feed" className={buttonClass('primary', 'sm')}>
                   Back to my dashboard
                 </Link>
                 <Link href="/help" className={buttonClass('outline', 'sm')}>

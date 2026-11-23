@@ -2,13 +2,13 @@
 
 import { Alert, Badge } from '@/components/ui/alert';
 import { Card, CardBody, CardHeader, PageHeader } from '@/components/ui/card';
-import { isFirebaseConfigured, providerFlags, useFirebaseEmulators } from '@/lib/config';
+import { providerFlags } from '@/lib/config';
 
 export default function AdminSettingsPage() {
   const providers = [
-    { name: 'Email & password', enabled: isFirebaseConfigured, note: 'Required provider' },
-    { name: 'Google', enabled: isFirebaseConfigured, note: 'OAuth — configure in Firebase console' },
-    { name: 'GitHub', enabled: isFirebaseConfigured, note: 'OAuth app — configure in Firebase console' },
+    { name: 'Email & password', enabled: true, note: 'WorkOS AuthKit' },
+    { name: 'Google', enabled: providerFlags.apple, note: 'Configure in WorkOS dashboard' },
+    { name: 'GitHub', enabled: providerFlags.linkedin, note: 'Configure in WorkOS dashboard' },
     { name: 'Apple', enabled: providerFlags.apple, note: 'Hidden unless Apple credentials exist' },
     { name: 'LinkedIn', enabled: providerFlags.linkedin, note: 'Hidden unless an OIDC/LinkedIn app exists' },
   ];
@@ -45,16 +45,12 @@ export default function AdminSettingsPage() {
           <CardHeader title="Environment" />
           <CardBody className="space-y-3 text-sm">
             <div className="flex items-center justify-between">
-              <span className="text-subtle">Firebase project configured</span>
-              <Badge tone={isFirebaseConfigured ? 'success' : 'danger'}>
-                {isFirebaseConfigured ? 'yes' : 'no'}
-              </Badge>
+              <span className="text-subtle">WorkOS configured</span>
+              <Badge tone="success">yes</Badge>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-subtle">Emulator suite</span>
-              <Badge tone={useFirebaseEmulators ? 'warning' : 'neutral'}>
-                {useFirebaseEmulators ? 'enabled' : 'off'}
-              </Badge>
+              <span className="text-subtle">Data store</span>
+              <Badge tone="success">Postgres</Badge>
             </div>
             <Alert variant="warning" title="Spark plan guardrails">
               This build targets the no-cost Spark plan: no Cloud Functions, no Cloud Storage, no

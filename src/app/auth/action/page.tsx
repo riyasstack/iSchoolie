@@ -1,20 +1,11 @@
-import type { Metadata } from 'next';
-import { Suspense } from 'react';
-import { AuthActionScreen, AuthLoading } from '@/components/auth/auth-screens';
+import { redirect } from 'next/navigation';
 
-export const metadata: Metadata = {
-  title: 'Completing your request',
-  robots: { index: false, follow: false },
-};
+export const dynamic = 'force-dynamic';
 
+/**
+ * Firebase email-action links used to land here. AuthKit handles verification
+ * and password recovery on its own pages, so old links simply restart sign-in.
+ */
 export default function AuthActionPage() {
-  return (
-    <div className="flex min-h-dvh items-center justify-center bg-bg px-4 py-12">
-      <div className="w-full max-w-[440px] rounded-2xl border border-line bg-surface p-6 shadow-card">
-        <Suspense fallback={<AuthLoading />}>
-          <AuthActionScreen />
-        </Suspense>
-      </div>
-    </div>
-  );
+  redirect('/sign-in');
 }

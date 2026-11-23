@@ -1,5 +1,35 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { cn } from '@/lib/utils/cn';
+
+/**
+ * Product logo.
+ *
+ * The artwork is the supplied brand lockup (`public/brand/ischoolie-logo.png`,
+ * 1018×213) and its standalone mark (`public/brand/ischoolie-mark.png`) for the
+ * places where the wordmark is not wanted. The lockup is drawn on white, so on
+ * dark surfaces and on the brand-gradient panel it sits on a white chip.
+ */
+
+const LOCKUP = {
+  sm: { height: 26, width: 124 },
+  md: { height: 30, width: 143 },
+  lg: { height: 36, width: 172 },
+} as const;
+
+const MARK_BOX = { sm: 'h-8 w-8', md: 'h-9 w-9', lg: 'h-11 w-11' } as const;
+
+const CHIP_ON_DARK = {
+  sm: 'rounded-md dark:bg-white dark:p-1',
+  md: 'rounded-lg dark:bg-white dark:p-1.5',
+  lg: 'rounded-lg dark:bg-white dark:p-2',
+} as const;
+
+const CHIP_SOLID = {
+  sm: 'rounded-md bg-white p-1',
+  md: 'rounded-lg bg-white p-1.5',
+  lg: 'rounded-lg bg-white p-2',
+} as const;
 
 export function Logo({
   size = 'md',
@@ -7,35 +37,35 @@ export function Logo({
   href = '/',
   className,
   tone = 'default',
+  priority = false,
 }: {
   size?: 'sm' | 'md' | 'lg';
   showWordmark?: boolean;
   href?: string | null;
   className?: string;
   tone?: 'default' | 'inverse';
+  priority?: boolean;
 }) {
-  const markSize = { sm: 'h-8 w-8 text-sm', md: 'h-9 w-9 text-base', lg: 'h-11 w-11 text-lg' }[size];
-  const wordSize = { sm: 'text-base', md: 'text-lg', lg: 'text-xl' }[size];
-
   const content = (
-    <span className={cn('inline-flex items-center gap-2.5', className)}>
-      <span
-        aria-hidden="true"
-        className={cn(
-          'relative flex items-center justify-center rounded-xl font-bold text-white brand-gradient shadow-sm',
-          markSize,
-        )}
-      >
-        <svg viewBox="0 0 24 24" className="h-[58%] w-[58%]" fill="none" aria-hidden="true">
-          <path d="M3 8.2 12 4l9 4.2-9 4.2-9-4.2Z" fill="currentColor" opacity="0.95" />
-          <path d="M6.4 11.2v4.1c0 1.5 2.5 2.7 5.6 2.7s5.6-1.2 5.6-2.7v-4.1" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-          <path d="M21 8.6v5.6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-        </svg>
-      </span>
-      {showWordmark && (
-        <span className={cn('font-semibold tracking-tight', wordSize, tone === 'inverse' ? 'text-white' : 'text-ink')}>
-          iSchoolie
-        </span>
+    <span className={cn('inline-flex items-center', className)}>
+      {showWordmark ? (
+        <Image
+          src="/brand/ischoolie-logo.png"
+          alt="iSchoolie"
+          width={LOCKUP[size].width}
+          height={LOCKUP[size].height}
+          priority={priority}
+          className={cn('select-none', tone === 'inverse' ? CHIP_SOLID[size] : CHIP_ON_DARK[size])}
+        />
+      ) : (
+        <Image
+          src="/brand/ischoolie-mark.png"
+          alt="iSchoolie"
+          width={128}
+          height={128}
+          priority={priority}
+          className={cn('select-none', MARK_BOX[size])}
+        />
       )}
     </span>
   );

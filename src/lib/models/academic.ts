@@ -1,4 +1,4 @@
-import type { Timestamp } from 'firebase/firestore';
+import type { AppDate } from './identity';
 
 /* ==========================================================================
    Academic records
@@ -25,15 +25,15 @@ export interface ClassDoc {
   allowSelfEnroll: boolean;
   archived: boolean;
   memberCount: number;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
+  createdAt: AppDate;
+  updatedAt: AppDate;
 }
 
 export interface ClassEnrollment {
   uid: string;
   displayName: string;
   role: ClassRole;
-  addedAt: Timestamp;
+  addedAt: AppDate;
 }
 
 export type AssignmentStatus = 'draft' | 'published' | 'closed';
@@ -44,13 +44,13 @@ export interface Assignment {
   institutionId: string;
   title: string;
   instructions: string;
-  dueAt: Timestamp | null;
+  dueAt: AppDate | null;
   maxScore: number;
   allowLateSubmission: boolean;
   status: AssignmentStatus;
   createdBy: string;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
+  createdAt: AppDate;
+  updatedAt: AppDate;
 }
 
 export type SubmissionStatus = 'submitted' | 'withdrawn';
@@ -60,8 +60,8 @@ export interface Submission {
   studentUid: string;
   studentName: string;
   content: string;
-  submittedAt: Timestamp;
-  updatedAt: Timestamp;
+  submittedAt: AppDate;
+  updatedAt: AppDate;
   status: SubmissionStatus;
   attempt: number;
 }
@@ -74,8 +74,8 @@ export interface Grade {
   feedback: string;
   published: boolean;
   gradedBy: string;
-  gradedAt: Timestamp;
-  publishedAt: Timestamp | null;
+  gradedAt: AppDate;
+  publishedAt: AppDate | null;
   /** Denormalised so an authorised guardian can render a result without
    *  reading the assignment (which guardians are not permitted to read). */
   assignmentTitle: string;
@@ -104,14 +104,14 @@ export interface Course {
   visibility: CourseVisibility;
   status: CourseStatus;
   enrollCount: number;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
+  createdAt: AppDate;
+  updatedAt: AppDate;
 }
 
 export interface CourseEnrollment {
   uid: string;
   displayName: string;
-  enrolledAt: Timestamp;
+  enrolledAt: AppDate;
 }
 
 export interface CourseLesson {
@@ -119,5 +119,5 @@ export interface CourseLesson {
   title: string;
   content: string;
   position: number;
-  createdAt: Timestamp;
+  createdAt: AppDate;
 }

@@ -1,217 +1,152 @@
 /**
- * Account read/write services.
+ * Account read/write services (client side).
  *
- * Read budget per session restore (Spark): 2 fixed documents
- * (`users/{uid}`, `userRoles/{uid}`) + one membership query + one read per
- * institution for its display name. That is the whole cost of knowing who a
- * person is and what they may open.
+ * This module used to talk to Firestore directly. Identity now lives in
+ * Postgres behind `/api/*` route handlers, so every call here is an HTTP
+ * request whose identity is resolved from the WorkOS session cookie — no
+ * caller ever passes a user id.
  */
-import {
-  collection,
-  collectionGroup,
-  doc,
-  getDoc,
-  getDocs,
-  limit,
-  orderBy,
-  query,
-  serverTimestamp,
-  setDoc,
-  updateDoc,
-  where,
-  writeBatch,
-} from 'firebase/firestore';
-import type { User } from 'firebase/auth';
-import { requireDb, docWithId, docsWithId } from '@/lib/firebase/db';
-import { slugify } from '@/lib/utils/dates';
 import type {
+  AccountClaims,
+  AccountSnapshot,
   AppNotification,
-  InstitutionMember,
-  RoleKey,
+  SessionUser,
   UserPrivateProfile,
-  UserProfile,
-  UserRolesDoc,
 } from '@/lib/models';
-import type { MembershipInput } from '@/lib/auth/workspaces';
-import { PRIVACY_VERSION, TERMS_VERSION } from '@/lib/constants';
 
-export interface AccountSnapshot {
-  profile: UserProfile | null;
-  roles: UserRolesDoc | null;
-  memberships: MembershipInput[];
-  requestedRoles: RoleKey[];
+export type { AccountSnapshot } from '@/lib/models';
+
+export interface AccountPayload {
+  configured: boolean;
+  user: SessionUser | null;
+  account: AccountSnapshot | null;
+  claims: AccountClaims | null;
 }
 
-function emptySafeguarding() {
-  return {
-    isMinor: false,
-    privateProfile: true,
-    messagingEnabled: false,
-    guardianConsentRecordedAt: null,
-  };
-}
-
-/**
- * Idempotent bootstrap of the documents a signed-in identity needs.
- *
- * The UID is the document id, so a retry can never create a second profile.
- * If this fails (offline, rules misconfigured) the caller surfaces a recovery
- * screen instead of leaving the user on a spinner.
- */
-export async function ensureAccountDocuments(user: User): Promise<void> {
-  const db = requireDb();
-  const profileRef = doc(db, 'users', user.uid);
-  const snapshot = await getDoc(profileRef);
-  if (snapshot.exists()) return;
-
-  const displayName = (user.displayName || user.email?.split('@')[0] || 'iSchoolie member').trim();
-  const handleBase = slugify(displayName) || 'member';
-
-  await setDoc(profileRef, {
-    uid: user.uid,
-    displayName,
-    handle: `${handleBase}-${user.uid.slice(0, 4)}`,
-    photoURL: user.photoURL ?? null,
-    headline: null,
-    country: null,
-    status: 'active',
-    onboarding: { complete: false, selectedRoles: [], completedAt: null },
-    activeWorkspace: null,
-    teacher: null,
-    studentLevel: null,
-    safeguarding: emptySafeguarding(),
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(path, {
+    ...init,
+    cache: 'no-store',
+    headers: { 'content-type': 'application/json', ...(init?.headers ?? {}) },
   });
-
-  await setDoc(doc(db, 'users', user.uid, 'private', 'profile'), {
-    email: user.email ?? '',
-    dateOfBirth: null,
-    schoolName: null,
-    grade: null,
-    collegeName: null,
-    degree: null,
-    department: null,
-    academicStage: null,
-    learningInterests: [],
-    guardianEmail: null,
-    consent: {
-      termsVersion: TERMS_VERSION,
-      privacyVersion: PRIVACY_VERSION,
-      acceptedTermsAt: serverTimestamp(),
-      acceptedPrivacyAt: serverTimestamp(),
-      guardianAcknowledgedAt: null,
-    },
-    updatedAt: serverTimestamp(),
-  });
+  const payload = (await response.json().catch(() => null)) as
+    | (T & { error?: string })
+    | null;
+  if (!response.ok) {
+    throw new Error(payload?.error ?? `Request failed (${response.status}).`);
+  }
+  return payload as T;
 }
 
-export async function loadAccount(uid: string): Promise<AccountSnapshot> {
-  const db = requireDb();
-  const [profile, roles] = await Promise.all([
-    getDoc(doc(db, 'users', uid)).then((snap) => docWithId<UserProfile>(snap)),
-    getDoc(doc(db, 'userRoles', uid)).then((snap) => docWithId<UserRolesDoc>(snap)),
-  ]);
+/** Session + account snapshot in one round trip. */
+export function fetchAccount(): Promise<AccountPayload> {
+  return request<AccountPayload>('/api/account');
+}
 
-  // One collection-group query covers every institution membership the person
-  // holds. Institution name is denormalised onto the member document, so this
-  // costs no additional reads.
-  const memberDocs = await getDocs(
-    query(collectionGroup(db, 'members'), where('uid', '==', uid), limit(25)),
+export async function loadPrivateProfile(): Promise<UserPrivateProfile | null> {
+  const { profile } = await request<{ profile: UserPrivateProfile | null }>(
+    '/api/account/profile',
   );
-  const memberships: MembershipInput[] = memberDocs.docs
-    .map((memberDoc) => {
-      const data = memberDoc.data() as InstitutionMember;
-      const institutionId = memberDoc.ref.parent.parent?.id ?? '';
-      return {
-        institutionId,
-        institutionName: data.institutionName ?? 'Institution',
-        role: data.role,
-        status: data.status,
-      };
-    })
-    .filter((membership) => membership.institutionId !== '' && membership.status === 'active');
-
-  const requestDocs = await getDocs(collection(db, 'users', uid, 'roleRequests'));
-  const requestedRoles = requestDocs.docs
-    .map((requestDoc) => requestDoc.data().role as RoleKey | undefined)
-    .filter((role): role is RoleKey => Boolean(role));
-
-  return { profile, roles, memberships, requestedRoles };
+  return profile;
 }
 
-export async function loadPrivateProfile(uid: string): Promise<UserPrivateProfile | null> {
-  const db = requireDb();
-  const snapshot = await getDoc(doc(db, 'users', uid, 'private', 'profile'));
-  return docWithId<UserPrivateProfile>(snapshot);
-}
-
-export async function setActiveWorkspace(uid: string, workspaceId: string | null): Promise<void> {
-  const db = requireDb();
-  await updateDoc(doc(db, 'users', uid), {
-    activeWorkspace: workspaceId,
-    updatedAt: serverTimestamp(),
+export async function setActiveWorkspace(workspaceId: string | null): Promise<void> {
+  await request<{ ok: boolean }>('/api/account/workspace', {
+    method: 'POST',
+    body: JSON.stringify({ workspaceId }),
   });
 }
 
+export async function changePassword(currentPassword: string, newPassword: string): Promise<{ ok: boolean; message?: string }> {
+  try {
+    await request<{ ok: boolean }>('/api/account/password', {
+      method: 'POST',
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+    return { ok: true };
+  } catch (cause) {
+    return { ok: false, message: cause instanceof Error ? cause.message : 'Could not update password.' };
+  }
+}
+
+export async function changeEmail(email: string): Promise<{ ok: boolean; message?: string }> {
+  try {
+    await request<{ ok: boolean }>('/api/account/email', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+    return { ok: true };
+  } catch (cause) {
+    return { ok: false, message: cause instanceof Error ? cause.message : 'Could not start the email change.' };
+  }
+}
+
+export async function revokeAllSessions(): Promise<void> {
+  await request<{ ok: boolean }>('/api/account/sessions', { method: 'DELETE' });
+}
+
+export async function deleteAccount(password?: string): Promise<{ ok: boolean; message?: string }> {
+  try {
+    await request<{ ok: boolean }>('/api/account/delete', {
+      method: 'POST',
+      body: JSON.stringify({ password: password ?? '' }),
+    });
+    return { ok: true };
+  } catch (cause) {
+    return { ok: false, message: cause instanceof Error ? cause.message : 'Could not delete the account.' };
+  }
+}
+
+export interface LinkedIdentity {
+  idpId: string;
+  type: string;
+  provider: string;
+}
+
+export async function listIdentities(): Promise<LinkedIdentity[]> {
+  const { identities } = await request<{ identities: LinkedIdentity[] }>('/api/account/identities');
+  return identities ?? [];
+}
 export async function updatePublicProfile(
-  uid: string,
-  values: { displayName?: string; headline?: string | null; country?: string | null },
+  values: {
+    displayName?: string;
+    headline?: string | null;
+    country?: string | null;
+  },
 ): Promise<void> {
-  const db = requireDb();
-  await updateDoc(doc(db, 'users', uid), { ...values, updatedAt: serverTimestamp() });
+  await request<{ account: AccountSnapshot }>('/api/account', {
+    method: 'PATCH',
+    body: JSON.stringify(values),
+  });
 }
 
 export async function updatePrivateProfile(
-  uid: string,
-  values: Partial<Omit<UserPrivateProfile, 'email' | 'updatedAt'>>,
+  values: Partial<Omit<UserPrivateProfile, 'email' | 'updatedAt' | 'consent'>>,
 ): Promise<void> {
-  const db = requireDb();
-  await setDoc(
-    doc(db, 'users', uid, 'private', 'profile'),
-    { ...values, updatedAt: serverTimestamp() },
-    { merge: true },
+  await request<{ profile: UserPrivateProfile }>('/api/account/profile', {
+    method: 'PATCH',
+    body: JSON.stringify(values),
+  });
+}
+
+export async function listNotifications(max = 20): Promise<AppNotification[]> {
+  const { notifications } = await request<{ notifications: AppNotification[] }>(
+    `/api/notifications?max=${encodeURIComponent(String(max))}`,
   );
+  return notifications;
 }
 
-export async function listNotifications(uid: string, max = 20): Promise<AppNotification[]> {
-  const db = requireDb();
-  const snapshot = await getDocs(
-    query(
-      collection(db, 'users', uid, 'notifications'),
-      orderBy('createdAt', 'desc'),
-      limit(max),
-    ),
-  );
-  return docsWithId<AppNotification>(snapshot);
+export async function markNotificationRead(notificationId: string): Promise<void> {
+  await request<{ ok: boolean }>('/api/notifications', {
+    method: 'POST',
+    body: JSON.stringify({ id: notificationId }),
+  });
 }
 
-export async function markNotificationRead(uid: string, notificationId: string): Promise<void> {
-  const db = requireDb();
-  await updateDoc(doc(db, 'users', uid, 'notifications', notificationId), { read: true });
-}
-
-export async function markAllNotificationsRead(uid: string, ids: string[]): Promise<void> {
+export async function markAllNotificationsRead(ids: string[]): Promise<void> {
   if (ids.length === 0) return;
-  const db = requireDb();
-  const batch = writeBatch(db);
-  for (const id of ids.slice(0, 400)) {
-    batch.update(doc(db, 'users', uid, 'notifications', id), { read: true });
-  }
-  await batch.commit();
+  await request<{ ok: boolean }>('/api/notifications', {
+    method: 'POST',
+    body: JSON.stringify({ ids }),
+  });
 }
-
-/** Best-effort cache. Never consulted for permissions or grades. */
-export async function writeDashboardSummary(
-  uid: string,
-  summary: { studentAssignmentCount: number; teacherClassCount: number; guardianChildCount: number },
-): Promise<void> {
-  const db = requireDb();
-  await setDoc(
-    doc(db, 'users', uid, 'summaries', 'overview'),
-    { ...summary, updatedAt: serverTimestamp() },
-    { merge: true },
-  );
-}
-
-

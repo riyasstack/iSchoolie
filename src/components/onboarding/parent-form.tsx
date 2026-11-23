@@ -47,7 +47,7 @@ export function ParentForm() {
         description: 'Next: request a link to your child.',
         variant: 'success',
       });
-      router.replace('/dashboard/parent');
+      router.replace('/feed');
     } catch (cause) {
       setBusy(false);
       setTopError(cause instanceof Error ? cause.message : 'Could not save your profile.');

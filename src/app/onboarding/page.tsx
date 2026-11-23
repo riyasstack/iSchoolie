@@ -15,7 +15,7 @@ export default function OnboardingPage() {
         step={2}
         title="Welcome to iSchoolie"
         description="How would you like to use iSchoolie? Pick a workspace to set up. You can add more roles later — one account covers everything."
-        backHref="/dashboard"
+        backHref="/feed"
       >
         <RoleSelection />
       </OnboardingShell>

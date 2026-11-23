@@ -79,7 +79,7 @@ export default function ClassPage() {
           revoked. Security Rules reject the underlying reads, so this page cannot confirm which of
           those applies.
         </Alert>
-        <Link href="/dashboard" className={buttonClass('secondary', 'sm', 'mt-4')}>Back to my dashboard</Link>
+        <Link href="/feed" className={buttonClass('secondary', 'sm', 'mt-4')}>Back to home</Link>
       </div>
     );
   }

@@ -9,9 +9,9 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
         <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-4 sm:px-6">
           <Logo size="sm" />
           <div className="flex items-center gap-3">
-            <Link href="/login" className="text-xs text-subtle underline-offset-2 hover:underline">
+            <a href="/login" className="text-xs text-subtle underline-offset-2 hover:underline">
               Sign in
-            </Link>
+            </a>
             <ThemeToggle />
           </div>
         </div>

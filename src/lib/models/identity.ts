@@ -1,10 +1,18 @@
-import type { Timestamp } from 'firebase/firestore';
 
 /* ==========================================================================
    Identity
    The public profile document (`users/{uid}`) must never contain private
    contact or academic detail. Those live in `users/{uid}/private/*`.
    ========================================================================== */
+
+/**
+ * A point in time.
+ *
+ * Firestore documents carry a `Timestamp`; the Postgres-backed identity API
+ * serialises ISO strings. Both shapes are accepted while the data layer
+ * migrates domain by domain, so readers must not assume `.toDate()`.
+ */
+export type AppDate = Date | string;
 
 export type UserStatus = 'active' | 'suspended' | 'pending_deletion';
 
@@ -27,7 +35,7 @@ export type TeacherVerificationStatus =
 export interface OnboardingState {
   complete: boolean;
   selectedRoles: RoleKey[];
-  completedAt: Timestamp | null;
+  completedAt: AppDate | null;
 }
 
 export interface TeacherPublicInfo {
@@ -46,7 +54,7 @@ export interface SafeguardingState {
   privateProfile: boolean;
   /** Direct messaging between adults and unverified minors is disabled. */
   messagingEnabled: boolean;
-  guardianConsentRecordedAt: Timestamp | null;
+  guardianConsentRecordedAt: AppDate | null;
 }
 
 /** Public-safe identity document. Readable by any authenticated user. */
@@ -63,8 +71,8 @@ export interface UserProfile {
   teacher: TeacherPublicInfo | null;
   studentLevel: StudentLevel | null;
   safeguarding: SafeguardingState;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
+  createdAt: AppDate;
+  updatedAt: AppDate;
 }
 
 /** Private, owner + platform-admin only. */
@@ -82,11 +90,11 @@ export interface UserPrivateProfile {
   consent: {
     termsVersion: string;
     privacyVersion: string;
-    acceptedTermsAt: Timestamp | null;
-    acceptedPrivacyAt: Timestamp | null;
-    guardianAcknowledgedAt: Timestamp | null;
+    acceptedTermsAt: AppDate | null;
+    acceptedPrivacyAt: AppDate | null;
+    guardianAcknowledgedAt: AppDate | null;
   };
-  updatedAt: Timestamp;
+  updatedAt: AppDate;
 }
 
 /**
@@ -95,23 +103,23 @@ export interface UserPrivateProfile {
  */
 export interface RoleRequest {
   role: RoleKey;
-  requestedAt: Timestamp;
+  requestedAt: AppDate;
   note: string | null;
 }
 
 export interface TeacherVerificationRecord {
   status: TeacherVerificationStatus;
   note: string | null;
-  decidedAt: Timestamp | null;
+  decidedAt: AppDate | null;
 }
 
 /**
- * `userRoles/{uid}` — the single authoritative role document.
+ * `userRoles/{uid}` — the single authoritative role record.
  *
  *  selfDeclared : non-privileged roles the person activated in onboarding
- *                 (rules allow the owner to edit this field only).
+ *                 (the owner may edit this field only).
  *  granted      : privileged grants — institution_admin, verified teacher.
- *                 Written exclusively by the privileged Admin SDK CLI.
+ *                 Written exclusively by a privileged server path.
  *  revoked      : hard denials; always win over selfDeclared/granted.
  *
  * Effective roles = (selfDeclared ∪ granted) − revoked.
@@ -121,10 +129,10 @@ export interface UserRolesDoc {
   granted: RoleKey[];
   revoked: RoleKey[];
   teacherVerification: TeacherVerificationRecord;
-  updatedAt: Timestamp;
+  updatedAt: AppDate;
 }
 
-/** Custom claims minted by the admin CLI (never by the browser). */
+/** Computed on the server from the account row, never minted by the browser. */
 export interface AccountClaims {
   platformAdmin: boolean;
   teacherVerified: boolean;
@@ -137,5 +145,41 @@ export interface DashboardSummary {
   studentAssignmentCount: number;
   teacherClassCount: number;
   guardianChildCount: number;
-  updatedAt: Timestamp;
+  updatedAt: AppDate;
+}
+
+/**
+ * The signed-in identity as the UI sees it.
+ *
+ * WorkOS owns credentials, so there is no client-side auth SDK object: this
+ * is the serialisable shape of the session user. Field names mirror the old
+ * Firebase `User` for the parts the UI reads (`uid`, `email`, `emailVerified`).
+ */
+export interface SessionUser {
+  uid: string;
+  email: string;
+  emailVerified: boolean;
+  displayName: string;
+  photoURL: string | null;
+  providerData: Array<{
+    providerId: string;
+    uid: string;
+    displayName: string | null;
+    email: string | null;
+    photoURL: string | null;
+  }>;
+  metadata: { lastSignInTime: string | null };
+}
+
+/** Everything `/api/account` needs to hand the client after sign-in. */
+export interface AccountSnapshot {
+  profile: UserProfile | null;
+  roles: UserRolesDoc | null;
+  memberships: Array<{
+    institutionId: string;
+    institutionName: string;
+    role: 'owner' | 'admin' | 'teacher' | 'staff';
+    status: 'active' | 'revoked';
+  }>;
+  requestedRoles: RoleKey[];
 }

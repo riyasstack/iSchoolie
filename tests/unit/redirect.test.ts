@@ -10,35 +10,35 @@ describe('safeRedirectPath', () => {
   });
 
   it('rejects absolute URLs and protocol-relative URLs', () => {
-    expect(safeRedirectPath('https://evil.example')).toBe('/dashboard');
-    expect(safeRedirectPath('http://evil.example')).toBe('/dashboard');
-    expect(safeRedirectPath('//evil.example')).toBe('/dashboard');
-    expect(safeRedirectPath('/\\evil.example')).toBe('/dashboard');
-    expect(safeRedirectPath('\\\\evil.example')).toBe('/dashboard');
+    expect(safeRedirectPath('https://evil.example')).toBe('/feed');
+    expect(safeRedirectPath('http://evil.example')).toBe('/feed');
+    expect(safeRedirectPath('//evil.example')).toBe('/feed');
+    expect(safeRedirectPath('/\\evil.example')).toBe('/feed');
+    expect(safeRedirectPath('\\\\evil.example')).toBe('/feed');
   });
 
   it('rejects encoded protocol-relative tricks', () => {
-    expect(safeRedirectPath('/%2F%2Fevil.example')).toBe('/dashboard');
-    expect(safeRedirectPath('/%5Cevil.example')).toBe('/dashboard');
+    expect(safeRedirectPath('/%2F%2Fevil.example')).toBe('/feed');
+    expect(safeRedirectPath('/%5Cevil.example')).toBe('/feed');
   });
 
   it('rejects javascript: and whitespace/control characters', () => {
-    expect(safeRedirectPath('javascript:alert(1)')).toBe('/dashboard');
-    expect(safeRedirectPath('/dash board')).toBe('/dashboard');
-    expect(safeRedirectPath('/dash\u0000board')).toBe('/dashboard');
+    expect(safeRedirectPath('javascript:alert(1)')).toBe('/feed');
+    expect(safeRedirectPath('/dash board')).toBe('/feed');
+    expect(safeRedirectPath('/dash\u0000board')).toBe('/feed');
   });
 
   it('never bounces back into auth screens', () => {
-    expect(safeRedirectPath('/login?next=/x')).toBe('/dashboard');
-    expect(safeRedirectPath('/signup')).toBe('/dashboard');
-    expect(safeRedirectPath('/forgot-password')).toBe('/dashboard');
+    expect(safeRedirectPath('/login?next=/x')).toBe('/feed');
+    expect(safeRedirectPath('/signup')).toBe('/feed');
+    expect(safeRedirectPath('/forgot-password')).toBe('/feed');
   });
 
   it('falls back for empty and oversized values', () => {
-    expect(safeRedirectPath('')).toBe('/dashboard');
-    expect(safeRedirectPath(null)).toBe('/dashboard');
-    expect(safeRedirectPath(undefined)).toBe('/dashboard');
-    expect(safeRedirectPath(`/${'a'.repeat(600)}`)).toBe('/dashboard');
+    expect(safeRedirectPath('')).toBe('/feed');
+    expect(safeRedirectPath(null)).toBe('/feed');
+    expect(safeRedirectPath(undefined)).toBe('/feed');
+    expect(safeRedirectPath(`/${'a'.repeat(600)}`)).toBe('/feed');
   });
 
   it('honours a custom fallback', () => {
@@ -47,6 +47,6 @@ describe('safeRedirectPath', () => {
 
   it('reads the next parameter from a search object', () => {
     expect(redirectFromSearch(new URLSearchParams('next=/courses'))).toBe('/courses');
-    expect(redirectFromSearch(new URLSearchParams('next=//evil.example'))).toBe('/dashboard');
+    expect(redirectFromSearch(new URLSearchParams('next=//evil.example'))).toBe('/feed');
   });
 });

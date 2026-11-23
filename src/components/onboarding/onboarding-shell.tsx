@@ -22,7 +22,7 @@ export function OnboardingShell({
     <div className="min-h-dvh bg-bg">
       <header className="border-b border-line bg-surface">
         <div className="mx-auto flex h-16 max-w-4xl items-center justify-between px-4 sm:px-6">
-          <Logo size="sm" href="/dashboard" />
+          <Logo size="sm" href="/feed" />
           <div className="flex items-center gap-3">
             <ThemeToggle />
             <Link href="/help" className="text-xs text-subtle underline-offset-2 hover:underline">

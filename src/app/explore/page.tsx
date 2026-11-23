@@ -1,133 +1,94 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ArrowRight, BookOpen, GraduationCap, MessagesSquare, ShieldCheck } from 'lucide-react';
-import { Logo } from '@/components/brand/logo';
-import { buttonClass } from '@/components/ui/button-styles';
+import { redirect } from 'next/navigation';
+import { Compass, Users } from 'lucide-react';
+import { PublicExplore } from '@/components/marketing/public-explore';
+import { SocialFrame } from '@/components/social/social-frame';
+import { PostList } from '@/components/social/post-list';
+import { SocialEmptyState } from '@/components/social/social-empty';
+import { getSocialViewer } from '@/lib/server/social/auth';
+import { getFeed } from '@/lib/server/social/posts';
+import { listTopics } from '@/lib/server/social/topics';
 
 export const metadata: Metadata = {
   title: 'Explore',
-  description:
-    'Browse published courses and communities on iSchoolie, and see how educators and institutions join.',
+  description: 'Discover public education discussions, topics and people on iSchoolie.',
 };
 
-const SURFACES = [
-  {
-    href: '/courses',
-    icon: <BookOpen aria-hidden="true" className="h-5 w-5" />,
-    title: 'Courses',
-    copy: 'Published courses from verified educators. Enrolment is instant and free.',
-  },
-  {
-    href: '/communities',
-    icon: <MessagesSquare aria-hidden="true" className="h-5 w-5" />,
-    title: 'Communities',
-    copy: 'Subject and school communities where members of iSchoolie share work and questions.',
-  },
-  {
-    href: '/help',
-    icon: <ShieldCheck aria-hidden="true" className="h-5 w-5" />,
-    title: 'Help and support',
-    copy: 'Roles, guardian links, verification and institution applications — answered plainly.',
-  },
-];
+export const dynamic = 'force-dynamic';
 
-export default function ExplorePage() {
+export default async function ExplorePage() {
+  const viewer = await getSocialViewer();
+  if (!viewer) return <PublicExplore />;
+  if (viewer.user.status !== 'active') redirect('/access-denied?reason=suspended');
+  if (!viewer.onboardingCompleted) redirect('/onboarding/social');
+  const [feed, topics] = await Promise.all([
+    getFeed(viewer, 'explore', { limit: 20 }),
+    listTopics(viewer),
+  ]);
+
   return (
-    <div className="min-h-dvh bg-bg">
-      <header className="border-b border-line bg-bg/80 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
-          <Logo />
-          <div className="flex items-center gap-2">
-            <Link href="/login" className={buttonClass('ghost', 'sm')}>Sign in</Link>
-            <Link href="/signup" className={buttonClass('primary', 'sm')}>Create account</Link>
-          </div>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
-        <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-brand">Explore</p>
-        <h1 className="mt-3 text-3xl font-semibold text-ink sm:text-4xl">
-          Find your place on iSchoolie
-        </h1>
-        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-subtle">
-          Everything public on the network, in one place. You can read course and community pages
-          without an account; enrolling, posting and messaging need a verified iSchoolie identity.
-        </p>
-
-        <section className="mt-8 grid gap-4 sm:grid-cols-3">
-          {SURFACES.map((surface) => (
+    <SocialFrame viewer={viewer}>
+      <div className="bg-surface sm:my-4 sm:rounded-2xl sm:border sm:border-line">
+        <header className="border-b border-line px-4 py-4 sm:px-5">
+          <h1 className="flex items-center gap-2 text-lg font-semibold tracking-tight text-ink">
+            <Compass className="h-5 w-5 text-brand" aria-hidden="true" />
+            Explore
+          </h1>
+          <p className="mt-1 text-xs leading-relaxed text-subtle">
+            Public education discussions beyond your network. Every post is filtered for visibility and
+            safeguarding before it appears.
+          </p>
+          <div className="mt-3 flex gap-1" role="tablist" aria-label="Explore categories">
+            <span className="rounded-full bg-ink px-3 py-1.5 text-xs font-semibold text-white dark:bg-brand">
+              Posts
+            </span>
             <Link
-              key={surface.href}
-              href={surface.href}
-              className="group rounded-2xl border border-line bg-surface p-5 transition hover:border-brand/30 hover:shadow-lift"
+              href="/connect/people"
+              className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold text-subtle hover:bg-mutedSurface hover:text-ink"
             >
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-brand/10 text-brand">
-                {surface.icon}
-              </span>
-              <h2 className="mt-3 flex items-center gap-1.5 text-sm font-semibold text-ink">
-                {surface.title}
-                <ArrowRight
-                  aria-hidden="true"
-                  className="h-3.5 w-3.5 text-subtle transition group-hover:translate-x-0.5 group-hover:text-brand"
-                />
-              </h2>
-              <p className="mt-1 text-xs leading-relaxed text-subtle">{surface.copy}</p>
+              <Users className="h-3.5 w-3.5" aria-hidden="true" /> People
             </Link>
-          ))}
-        </section>
-
-        <section id="educators" className="mt-12 scroll-mt-20">
-          <div className="flex items-start gap-3">
-            <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand/10 text-brand">
-              <GraduationCap aria-hidden="true" className="h-5 w-5" />
-            </span>
-            <div>
-              <h2 className="text-lg font-semibold text-ink">For educators</h2>
-              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-subtle">
-                Create your teaching profile immediately. Publishing courses and appearing as a
-                verified educator both require review by the iSchoolie team — you cannot grant
-                yourself either, and the database rules enforce that, not the interface.
-              </p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <Link href="/signup" className={buttonClass('primary', 'sm')}>
-                  Create an educator account
-                </Link>
-                <Link href="/help" className={buttonClass('outline', 'sm')}>
-                  How verification works
-                </Link>
-              </div>
-            </div>
+            <Link
+              href="/topics"
+              className="rounded-full px-3 py-1.5 text-xs font-semibold text-subtle hover:bg-mutedSurface hover:text-ink"
+            >
+              Topics
+            </Link>
           </div>
-        </section>
-
-        <section id="institutions" className="mt-10 scroll-mt-20 border-t border-line pt-10">
-          <div className="flex items-start gap-3">
-            <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand/10 text-brand">
-              <ShieldCheck aria-hidden="true" className="h-5 w-5" />
-            </span>
-            <div>
-              <h2 className="text-lg font-semibold text-ink">For institutions</h2>
-              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-subtle">
-                Apply once, then track the review from your own status page. Institution tools unlock
-                only after the application is approved and an owner is provisioned; until then the
-                rest of the account works normally.
-              </p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <Link href="/signup" className={buttonClass('primary', 'sm')}>
-                  Request institutional access
+          <div className="no-scrollbar mt-3 flex gap-1.5 overflow-x-auto">
+            {[...topics]
+              .sort((a, b) => b.postCount - a.postCount)
+              .slice(0, 8)
+              .map((topic) => (
+                <Link
+                  key={topic.id}
+                  href={`/topics/${topic.slug}`}
+                  className="whitespace-nowrap rounded-full border border-line px-2.5 py-1 text-2xs font-medium text-subtle hover:border-brand/40 hover:text-brand"
+                >
+                  #{topic.name}
                 </Link>
-                <Link href="/help" className={buttonClass('outline', 'sm')}>
-                  What reviewers need
-                </Link>
-              </div>
-            </div>
+              ))}
           </div>
-        </section>
+        </header>
 
-        <p className="mt-12 text-xs text-subtle">
-          <Link href="/" className="underline-offset-2 hover:underline">Back to the homepage</Link>
-        </p>
-      </main>
-    </div>
+        <PostList
+          initialPage={feed}
+          kind="explore"
+          empty={
+            <SocialEmptyState
+              icon={<Compass className="h-5 w-5" />}
+              title="No public discussions yet"
+              description="Follow topics and invite your education network. Public posts from eligible accounts appear here."
+              actions={[
+                { href: '/connect/people', label: 'Discover people', variant: 'primary' },
+                { href: '/topics', label: 'Explore topics', variant: 'secondary' },
+              ]}
+            />
+          }
+          storageKey="explore"
+        />
+      </div>
+    </SocialFrame>
   );
 }

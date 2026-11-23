@@ -53,9 +53,9 @@ export default function HelpPage() {
       <header className="border-b border-line bg-surface">
         <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-4 sm:px-6">
           <Logo size="sm" />
-          <Link href="/login" className="text-xs text-subtle underline-offset-2 hover:underline">
+          <a href="/login" className="text-xs text-subtle underline-offset-2 hover:underline">
             Sign in
-          </Link>
+          </a>
         </div>
       </header>
 
@@ -92,7 +92,7 @@ export default function HelpPage() {
             <li><strong className="text-ink">Safety concerns:</strong> mark the report in-app and email support with “safeguarding” in the subject line.</li>
           </ul>
           <div className="mt-4 flex flex-wrap gap-2">
-            <Link href="/login" className={buttonClass('secondary', 'sm')}>Sign in</Link>
+            <a href="/login" className={buttonClass('secondary', 'sm')}>Sign in</a>
             <Link href="/legal/privacy" className={buttonClass('ghost', 'sm')}>Privacy policy</Link>
             <Link href="/legal/terms" className={buttonClass('ghost', 'sm')}>Terms</Link>
           </div>

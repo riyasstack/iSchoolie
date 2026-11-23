@@ -13,8 +13,8 @@ export default function NotFound() {
         so we can fix it.
       </p>
       <div className="mt-6 flex flex-wrap justify-center gap-2">
-        <Link href="/dashboard" className={buttonClass('primary', 'sm')}>Go to my dashboard</Link>
-        <Link href="/login" className={buttonClass('outline', 'sm')}>Sign in</Link>
+        <Link href="/feed" className={buttonClass('primary', 'sm')}>Go to my feed</Link>
+        <a href="/login" className={buttonClass('outline', 'sm')}>Sign in</a>
         <Link href="/help" className={buttonClass('ghost', 'sm')}>Get help</Link>
       </div>
     </div>

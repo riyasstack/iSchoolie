@@ -56,7 +56,7 @@ export function InstitutionApplicationForm() {
   React.useEffect(() => {
     if (!user) return;
     let cancelled = false;
-    getMyApplication(user.uid)
+    getMyApplication()
       .then((application) => {
         if (cancelled) return;
         if (application) {
@@ -96,7 +96,7 @@ export function InstitutionApplicationForm() {
     setBusy(true);
     setTopError(null);
     try {
-      await saveInstitutionApplication(user.uid, values, {
+      await saveInstitutionApplication(values, {
         submit,
         applicantName: profile?.displayName ?? 'Applicant',
       });

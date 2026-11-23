@@ -9,7 +9,7 @@
 const BLOCKED_PREFIXES = ['//', '/\\', '\\\\'];
 
 /** Returns a safe internal path, or the fallback. */
-export function safeRedirectPath(raw: string | null | undefined, fallback = '/dashboard'): string {
+export function safeRedirectPath(raw: string | null | undefined, fallback = '/feed'): string {
   if (!raw) return fallback;
   const value = raw.trim();
   if (value.length === 0 || value.length > 512) return fallback;
@@ -23,12 +23,12 @@ export function safeRedirectPath(raw: string | null | undefined, fallback = '/da
   // Reject encoded protocol-relative forms such as /%2F%2Fevil.com
   if (/^\/%2f/i.test(value) || /^\/%5c/i.test(value)) return fallback;
   // Never bounce back into auth screens after a successful login.
-  if (/^\/(login|signup|reset-password|forgot-password)(\/|\?|$)/.test(value)) return fallback;
+  if (/^\/(login|signup|sign-in|sign-up|reset-password|forgot-password)(\/|\?|$)/.test(value)) return fallback;
 
   return value;
 }
 
 /** Read `next` from a URLSearchParams-like object. */
 export function redirectFromSearch(search: { get(name: string): string | null }): string {
-  return safeRedirectPath(search.get('next'), '/dashboard');
+  return safeRedirectPath(search.get('next'), '/feed');
 }
