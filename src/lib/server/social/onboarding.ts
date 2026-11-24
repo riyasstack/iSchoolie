@@ -7,7 +7,7 @@ import {
   TOPIC_CATALOG,
   type EducationStageValue,
 } from '@/lib/social/catalog';
-import { ageBand, parseIsoDate } from '@/lib/utils/dates';
+import { ageBand, parseIsoDate, slugify } from '@/lib/utils/dates';
 import type { OnboardingSnapshot } from '@/lib/social/types';
 import type { SocialViewerRecord } from '@/lib/server/social/auth';
 import { recordAudit } from '@/lib/server/social/audit';
@@ -65,6 +65,7 @@ export async function getOnboardingSnapshot(
     connectDone: progress.connectDone,
     dateOfBirth: privateProfile?.dateOfBirth ?? null,
     displayName: user.displayName,
+    handle: user.handle,
     photoUrl: user.photoUrl,
     bio: socialProfile.bio,
     region: socialProfile.region,
@@ -112,6 +113,7 @@ async function markProgress(
 }
 
 export interface OnboardingPayload {
+  username?: unknown;
   displayName?: unknown;
   dateOfBirth?: unknown;
   bio?: unknown;
@@ -169,26 +171,49 @@ export async function saveOnboardingStep(
     const bio = asString(payload.bio, 300);
     const region = asString(payload.region, 80);
 
-    await prisma.$transaction(async (tx) => {
-      await tx.user.update({
-        where: { id: viewer.user.id },
-        data: {
-          displayName,
-          isMinor,
-          // A student account is always private, whatever the client sends.
-          ...(isMinor ? { privateProfile: true } : {}),
-          ...(photoUrl ? { photoUrl } : {}),
-        },
+    const rawUsername = asString(payload.username, 40);
+    let handle: string | undefined;
+    if (rawUsername) {
+      const normalized = slugify(rawUsername);
+      if (normalized.length < 3) {
+        throw new Error('Choose a username with at least 3 letters or numbers.');
+      }
+      const taken = await prisma.user.findFirst({
+        where: { handle: normalized, NOT: { id: viewer.user.id } },
+        select: { id: true },
       });
+      if (taken) throw new Error('This username is already taken.');
+      handle = normalized;
+    }
+
+    try {
+      await prisma.$transaction(async (tx) => {
+        await tx.user.update({
+          where: { id: viewer.user.id },
+          data: {
+            displayName,
+            isMinor,
+            // A student account is always private, whatever the client sends.
+            ...(isMinor ? { privateProfile: true } : {}),
+            ...(photoUrl ? { photoUrl } : {}),
+            ...(handle ? { handle } : {}),
+          },
+        });
       await tx.userPrivate.update({
         where: { userId: viewer.user.id },
         data: { dateOfBirth },
       });
-      await tx.socialProfile.update({
+              await tx.socialProfile.update({
         where: { userId: viewer.user.id },
         data: { bio, region: region || null },
       });
-    });
+      });
+    } catch (error) {
+      if (error && typeof error === 'object' && 'code' in error && (error as { code?: string }).code === 'P2002') {
+        throw new Error('This username is already taken.');
+      }
+      throw error;
+    }
 
     await markProgress(viewer.user.id, 2, 'identity');
     return { nextStep: 2, completed: false };

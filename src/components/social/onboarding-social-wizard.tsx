@@ -45,6 +45,7 @@ export function OnboardingSocialWizard({
     return Math.min(5, Math.max(1, requested));
   });
   const [displayName, setDisplayName] = React.useState(initial.displayName);
+  const [username, setUsername] = React.useState(initial.handle);
   const [dateOfBirth, setDateOfBirth] = React.useState(initial.dateOfBirth?.slice(0, 10) ?? '');
   const [bio, setBio] = React.useState(initial.bio);
   const [region, setRegion] = React.useState(initial.region ?? '');
@@ -102,6 +103,7 @@ export function OnboardingSocialWizard({
   function valuesFor(current: number): Record<string, unknown> {
     if (current === 1) {
       return {
+        username,
         displayName,
         dateOfBirth,
         bio,
@@ -125,6 +127,7 @@ export function OnboardingSocialWizard({
   function validate(current: number): string | null {
     if (current === 1) {
       if (displayName.trim().length < 2) return 'Enter the name you want people to see.';
+      if (username.trim().length < 3) return 'Choose a username with at least 3 letters or numbers.';
       if (!/^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth)) return 'Enter your date of birth.';
     }
     if (current === 2 && !stage) return 'Choose where you are in your education journey.';
@@ -259,6 +262,16 @@ export function OnboardingSocialWizard({
                 maxLength={80}
                 autoComplete="name"
                 onChange={(event) => setDisplayName(event.target.value)}
+              />
+            </Field>
+
+            <Field label="Username" htmlFor="onboarding-username" required hint="Your unique username. Lowercase letters, numbers, hyphens.">
+              <Input
+                id="onboarding-username"
+                value={username}
+                maxLength={40}
+                autoComplete="username"
+                onChange={(event) => setUsername(event.target.value)}
               />
             </Field>
 

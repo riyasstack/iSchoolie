@@ -197,6 +197,7 @@ export interface OnboardingSnapshot {
   connectDone: boolean;
   dateOfBirth: string | null;
   displayName: string;
+  handle: string;
   photoUrl: string | null;
   bio: string;
   region: string | null;
