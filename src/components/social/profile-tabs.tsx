@@ -16,7 +16,7 @@ export function ProfileTabs({ handle }: { handle: string }) {
   return (
     <nav
       aria-label="Profile sections"
-      className="sticky top-14 z-30 flex border-b border-line bg-surface/95 backdrop-blur lg:top-0"
+      className="sticky top-14 z-30 flex border-b border-line bg-surface/80 backdrop-blur-md lg:top-0"
     >
       {tabs.map((tab) => {
         const active = tab.exact ? pathname === tab.href : pathname.startsWith(tab.href);

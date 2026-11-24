@@ -138,7 +138,7 @@ export function SearchClient({
 
   return (
     <div>
-      <div className="sticky top-14 z-30 border-b border-line bg-surface/95 px-4 py-3 backdrop-blur sm:px-5 lg:top-0">
+      <div className="sticky top-14 z-30 border-b border-line bg-surface/80 px-4 py-3 backdrop-blur-md sm:px-5 lg:top-0">
         <form onSubmit={submit} className="relative">
           <Search
             className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle"

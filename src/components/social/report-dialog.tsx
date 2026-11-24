@@ -59,7 +59,7 @@ export function ReportDialog({
       <button
         type="button"
         aria-label="Close report dialog"
-        className="absolute inset-0 bg-ink/45 backdrop-blur-[2px]"
+        className="absolute inset-0 bg-ink/45 backdrop-blur-md"
         onClick={onClose}
       />
       <div
@@ -67,7 +67,7 @@ export function ReportDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="report-title"
-        className="relative w-full max-w-md rounded-t-2xl border border-line bg-surface p-5 shadow-lift sm:rounded-2xl"
+        className="relative w-full max-w-md rounded-t-2xl border border-line bg-surface p-5 shadow-lift backdrop-blur-sm sm:rounded-2xl"
       >
         <div className="flex items-start justify-between gap-3">
           <div>

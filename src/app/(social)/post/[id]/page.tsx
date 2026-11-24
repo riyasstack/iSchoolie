@@ -21,7 +21,7 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
 
   return (
     <div className="bg-surface sm:my-4 sm:rounded-2xl sm:border sm:border-line">
-      <header className="sticky top-14 z-30 flex items-center gap-3 border-b border-line bg-surface/95 px-4 py-3 backdrop-blur sm:px-5 lg:top-0">
+      <header className="sticky top-14 z-30 flex items-center gap-3 border-b border-line bg-surface/80 px-4 py-3 backdrop-blur-md sm:px-5 lg:top-0">
         <Link
           href="/feed"
           aria-label="Back to feed"

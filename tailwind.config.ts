@@ -53,8 +53,9 @@ const config: Config = {
       spacing: { 4.5: '1.125rem', 18: '4.5rem' },
       borderRadius: { xl: '0.875rem', '2xl': '1.125rem', '3xl': '1.5rem' },
       boxShadow: {
-        card: '0 1px 2px 0 rgb(11 18 32 / 0.04), 0 8px 24px -12px rgb(11 18 32 / 0.12)',
-        lift: '0 2px 4px rgb(11 18 32 / 0.05), 0 18px 40px -18px rgb(11 18 32 / 0.22)',
+        card: '0 1px 2px 0 rgb(11 18 32 / 0.05), 0 8px 24px -12px rgb(11 18 32 / 0.14), inset 0 1px 0 0 rgb(255 255 255 / 0.5)',
+        lift: '0 2px 4px rgb(11 18 32 / 0.06), 0 20px 44px -18px rgb(11 18 32 / 0.24), inset 0 1px 0 0 rgb(255 255 255 / 0.55)',
+        'card-hover': '0 2px 4px 0 rgb(11 18 32 / 0.06), 0 16px 40px -14px rgb(11 18 32 / 0.18), inset 0 1px 0 0 rgb(255 255 255 / 0.6)',
         ring: '0 0 0 1px rgb(var(--border))',
       },
       backgroundImage: {

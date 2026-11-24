@@ -24,7 +24,7 @@ export function SettingsNav({ isAdmin }: { isAdmin: boolean }) {
   return (
     <nav
       aria-label="Settings sections"
-      className="no-scrollbar flex gap-1 overflow-x-auto border-b border-line bg-surface px-3 py-2 sm:px-4 lg:sticky lg:top-0 lg:z-20"
+      className="no-scrollbar flex gap-1 overflow-x-auto border-b border-line bg-surface/80 px-3 py-2 backdrop-blur-md sm:px-4 lg:sticky lg:top-0 lg:z-20"
     >
       {items.map((item) => {
         const active = pathname === item.href;

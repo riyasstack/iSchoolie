@@ -51,7 +51,7 @@ export default async function FeedPage({
 
   return (
     <div>
-      <header className="sticky top-14 z-30 border-b border-line bg-surface/95 backdrop-blur lg:top-0">
+      <header className="sticky top-14 z-30 border-b border-line bg-surface/80 backdrop-blur-md lg:top-0">
         <div className="flex items-center justify-between gap-2 px-4 py-3 sm:px-5">
           <div>
             <h1 className="text-lg font-semibold tracking-tight text-ink">Home</h1>

@@ -167,10 +167,10 @@ export function SocialAppShell({
             <button
               type="button"
               aria-label="Close navigation"
-              className="absolute inset-0 bg-ink/40 backdrop-blur-[2px]"
+              className="absolute inset-0 bg-ink/40 backdrop-blur-md"
               onClick={() => setDrawer(false)}
             />
-            <div className="relative h-full w-[290px] max-w-[86%] border-r border-line bg-surface px-3 shadow-lift">
+            <div className="relative h-full w-[290px] max-w-[86%] border-r border-line bg-surface/95 px-3 shadow-lift backdrop-blur-md">
               <button
                 type="button"
                 onClick={() => setDrawer(false)}
@@ -185,7 +185,7 @@ export function SocialAppShell({
         )}
 
         <div className="min-w-0 flex-1 border-r border-line bg-[#fbfbfd] dark:bg-bg">
-          <header className="sticky top-0 z-40 flex h-14 items-center justify-between gap-3 border-b border-line bg-surface/90 px-3 backdrop-blur lg:hidden">
+          <header className="sticky top-0 z-40 flex h-14 items-center justify-between gap-3 border-b border-line bg-surface/80 px-3 backdrop-blur-md lg:hidden">
             <button
               type="button"
               onClick={() => setDrawer(true)}
@@ -231,7 +231,7 @@ export function SocialAppShell({
 
       <nav
         aria-label="Mobile navigation"
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/95 backdrop-blur lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/85 backdrop-blur-md lg:hidden"
       >
         <div className="mx-auto grid max-w-md grid-cols-5">
           {mobile.map((item) => {
