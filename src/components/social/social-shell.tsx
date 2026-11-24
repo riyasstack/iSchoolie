@@ -79,15 +79,15 @@ export function SocialAppShell({
         href={item.href}
         aria-current={active ? 'page' : undefined}
         className={cn(
-          'group flex items-center gap-3 rounded-xl text-[0.95rem] transition',
-          compact ? 'px-3 py-2.5' : 'px-3 py-2.5',
+          'group flex items-center gap-4 rounded-full px-4 py-2.5 text-[1.05rem] font-medium transition',
+          compact ? 'px-3 py-2.5' : 'px-4 py-2.5',
           active
-            ? 'bg-brand/10 font-semibold text-brand'
-            : 'font-medium text-subtle hover:bg-mutedSurface hover:text-ink',
+            ? 'font-bold text-ink'
+            : 'text-ink hover:bg-mutedSurface',
         )}
       >
         <span className="relative">
-          <Icon className="h-5 w-5" aria-hidden="true" />
+          <Icon className="h-6 w-6" aria-hidden="true" />
           {item.badge ? (
             <span className="absolute -right-2 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[0.6rem] font-bold leading-none text-white">
               {item.badge > 99 ? '99+' : item.badge}
@@ -110,9 +110,12 @@ export function SocialAppShell({
         {primary.map((item) => navLink(item))}
       </nav>
 
-      <Link href="/compose" className={buttonClass('primary', 'md', 'mx-1 mt-1 w-auto')}>
-        <PenSquare className="h-4 w-4" aria-hidden="true" />
-        Create post
+      <Link
+        href="/compose"
+        className="mx-1 mt-2 flex h-12 w-auto items-center justify-center gap-2 rounded-full bg-brand px-6 text-base font-bold text-brand-fg shadow-none transition hover:brightness-110"
+      >
+        <PenSquare className="h-5 w-5" aria-hidden="true" />
+        Post
       </Link>
 
       <div className="mt-1 rounded-xl border border-line bg-mutedSurface/60 p-3">
@@ -149,7 +152,7 @@ export function SocialAppShell({
   ];
 
   return (
-    <div className="min-h-dvh bg-[#f7f8fb] dark:bg-bg">
+    <div className="min-h-dvh bg-bg">
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-full focus:bg-surface focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-ink focus:shadow-lift"
@@ -158,7 +161,7 @@ export function SocialAppShell({
       </a>
 
       <div className="mx-auto flex w-full max-w-[1320px]">
-        <aside className="sticky top-0 hidden h-dvh w-[252px] shrink-0 flex-col border-r border-line bg-surface px-3 lg:flex">
+        <aside className="sticky top-0 hidden h-dvh w-[275px] shrink-0 flex-col border-r border-line bg-bg px-3 lg:flex">
           {sidebar}
         </aside>
 
@@ -184,7 +187,7 @@ export function SocialAppShell({
           </div>
         )}
 
-        <div className="min-w-0 flex-1 border-r border-line bg-[#fbfbfd] dark:bg-bg">
+        <div className="min-w-0 flex-1 border-r border-line bg-bg">
           <header className="sticky top-0 z-40 flex h-14 items-center justify-between gap-3 border-b border-line bg-surface/80 px-3 backdrop-blur-md lg:hidden">
             <button
               type="button"
@@ -209,13 +212,13 @@ export function SocialAppShell({
             </div>
           </header>
 
-          <main id="main-content" className="mx-auto w-full max-w-[680px] pb-28 lg:pb-10">
+          <main id="main-content" className="mx-auto w-full max-w-[600px] pb-28 lg:pb-10">
             {children}
           </main>
         </div>
 
         {rightRail && (
-          <aside className="sticky top-0 hidden h-dvh w-[332px] shrink-0 overflow-y-auto px-4 py-5 xl:block">
+          <aside className="sticky top-0 hidden h-dvh w-[350px] shrink-0 overflow-y-auto px-6 py-3 xl:block">
             {rightRail}
           </aside>
         )}

@@ -272,8 +272,8 @@ export function PostCard({
   return (
     <article
       className={cn(
-        'bg-surface transition-colors',
-        detail ? 'px-4 py-4 sm:px-6' : 'px-4 py-3.5 sm:px-5',
+        'bg-bg transition-colors hover:bg-mutedSurface/30',
+        detail ? 'px-4 py-4 sm:px-6' : 'px-4 py-3 sm:px-5',
         !detail && 'border-b border-line',
       )}
     >
@@ -327,7 +327,7 @@ export function PostCard({
                 >
                   {relativeTime(post.createdAt)}
                 </Link>
-                {post.editedAt && <span className="text-2xs text-subtle">edited</span>}
+                {post.editedAt && <span className="text-xs text-subtle">edited</span>}
                 <span className="text-subtle" title={post.audience === 'public' ? 'Public' : 'Followers'}>
                   {post.audience === 'public' ? (
                     <Globe2 className="h-3.5 w-3.5" aria-label="Public post" />
@@ -420,8 +420,8 @@ export function PostCard({
             <RichText
               text={post.body}
               className={cn(
-                'mt-1 text-[0.95rem] leading-relaxed text-ink',
-                detail ? 'text-base' : '',
+                'mt-1 text-[15px] leading-normal text-ink',
+                detail ? 'text-[17px]' : '',
               )}
             />
           )}
@@ -432,7 +432,7 @@ export function PostCard({
                 <Link
                   key={topic.id}
                   href={`/topics/${topic.slug}`}
-                  className="rounded-full bg-brand/8 px-2.5 py-1 text-2xs font-semibold text-brand transition hover:bg-brand/15"
+                  className="rounded-full bg-brand/8 px-2.5 py-1 text-xs font-semibold text-brand transition hover:bg-brand/15"
                 >
                   {topic.name}
                 </Link>
@@ -517,7 +517,7 @@ export function PostCard({
                 <Share2 className="h-4 w-4" aria-hidden="true" />
               </button>
               {copied && (
-                <span role="status" className="text-2xs font-medium text-success">
+                <span role="status" className="text-xs font-medium text-success">
                   Link copied
                 </span>
               )}

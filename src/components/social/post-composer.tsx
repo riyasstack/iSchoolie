@@ -223,7 +223,7 @@ export function PostComposer({
       onSubmit={publish}
       className={cn(
         'bg-surface',
-        compact ? 'px-0 py-0' : 'border-b border-line px-4 py-4 sm:px-5',
+        compact ? 'px-0 py-0' : 'border-b border-line bg-bg px-4 py-4 sm:px-5',
       )}
       aria-label={heading}
     >
@@ -254,10 +254,10 @@ export function PostComposer({
             onChange={(event) => setBody(event.target.value.slice(0, POST_MAX_LENGTH + 50))}
             placeholder={
               mode === 'reply'
-                ? 'Write a thoughtful reply…'
+                ? 'Post your reply'
                 : mode === 'quote'
-                  ? 'Add your perspective…'
-                  : 'Ask a question, share a finding, or start a discussion…'
+                  ? 'Add a comment'
+                  : "What's happening?"
             }
             aria-label={heading}
             rows={compact ? 2 : 3}

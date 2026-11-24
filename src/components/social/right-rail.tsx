@@ -34,7 +34,7 @@ export function RightRail({
         />
       </form>
 
-      <section className="rounded-2xl border border-line bg-surface p-4">
+      <section className="rounded-2xl bg-mutedSurface p-4">
         <div className="flex items-center justify-between">
           <h2 className="flex items-center gap-1.5 text-sm font-semibold text-ink">
             <UserPlus className="h-4 w-4 text-brand" aria-hidden="true" />
@@ -81,7 +81,7 @@ export function RightRail({
         )}
       </section>
 
-      <section className="rounded-2xl border border-line bg-surface p-4">
+      <section className="rounded-2xl bg-mutedSurface p-4">
         <div className="flex items-center justify-between">
           <h2 className="flex items-center gap-1.5 text-sm font-semibold text-ink">
             <Sparkles className="h-4 w-4 text-brand" aria-hidden="true" />
@@ -108,7 +108,7 @@ export function RightRail({
         </ul>
       </section>
 
-      <section className="rounded-2xl border border-brand/20 bg-brand/5 p-4">
+      <section className="rounded-2xl bg-mutedSurface p-4">
         <h2 className="text-sm font-semibold text-ink">Build your education network</h2>
         <p className="mt-1 text-xs leading-relaxed text-subtle">
           Follow educators and researchers in the subjects you are learning. Your Following feed

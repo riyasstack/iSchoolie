@@ -51,21 +51,11 @@ export default async function FeedPage({
 
   return (
     <div>
-      <header className="sticky top-14 z-30 border-b border-line bg-surface/80 backdrop-blur-md lg:top-0">
-        <div className="flex items-center justify-between gap-2 px-4 py-3 sm:px-5">
-          <div>
-            <h1 className="text-lg font-semibold tracking-tight text-ink">Home</h1>
-            <p className="text-2xs text-subtle">Learn. Teach. Connect. Grow.</p>
-          </div>
-          <Link
-            href="/connect/people"
-            className="inline-flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-2xs font-semibold text-ink hover:border-brand/40 hover:text-brand"
-          >
-            <Sparkles className="h-3.5 w-3.5 text-brand" aria-hidden="true" />
-            Discover people
-          </Link>
+      <header className="sticky top-14 z-30 border-b border-line bg-bg/80 backdrop-blur-md lg:top-0">
+        <div className="px-4 py-3 sm:px-5">
+          <h1 className="text-xl font-bold tracking-tight text-ink">Home</h1>
         </div>
-        <nav className="flex" aria-label="Feed timeline">
+        <nav className="flex border-b border-line" aria-label="Feed timeline">
           {[
             { value: 'for-you', label: 'For You' },
             { value: 'following', label: 'Following' },
@@ -77,13 +67,13 @@ export default async function FeedPage({
                 href={tab.value === 'following' ? '/feed?tab=following' : '/feed'}
                 aria-current={active ? 'page' : undefined}
                 className={cn(
-                  'relative flex-1 py-2.5 text-center text-sm font-semibold transition hover:bg-mutedSurface/60',
-                  active ? 'text-ink' : 'text-subtle',
+                  'relative flex-1 py-4 text-center text-[15px] font-medium transition hover:bg-mutedSurface/40',
+                  active ? 'font-bold text-ink' : 'text-subtle',
                 )}
               >
                 {tab.label}
                 {active && (
-                  <span className="absolute inset-x-8 bottom-0 h-0.5 rounded-full bg-brand" aria-hidden="true" />
+                  <span className="absolute inset-x-0 bottom-0 mx-auto h-1 w-14 rounded-full bg-brand" aria-hidden="true" />
                 )}
               </Link>
             );
@@ -91,7 +81,7 @@ export default async function FeedPage({
         </nav>
       </header>
 
-      <div className="border-b border-line bg-surface px-4 py-3 sm:px-5">
+      <div className="border-b border-line bg-bg px-4 py-3 sm:px-5">
         <PostComposer
           viewer={socialViewer}
           topics={topics.map((topic) => ({ slug: topic.slug, name: topic.name }))}
