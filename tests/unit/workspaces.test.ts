@@ -76,13 +76,13 @@ describe('resolvePostAuthRoute', () => {
     expect(resolvePostAuthRoute({ ...base, emailVerified: false }).path).toBe('/verify-email');
   });
 
-  it('sends a new user to role selection', () => {
+  it('sends a new user to social onboarding', () => {
     expect(
       resolvePostAuthRoute({
         ...base,
         profile: { ...baseProfile, onboarding: { complete: false, selectedRoles: [], completedAt: null } },
-      }).reason,
-    ).toBe('onboarding');
+      }).path,
+    ).toBe('/onboarding/social');
   });
 
   it('sends a suspended account to the restricted screen', () => {

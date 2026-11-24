@@ -49,7 +49,7 @@ export function EducatorSpotlight() {
 
           <Reveal delay={120}>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-              <Link href="/onboarding/teacher" className="home-cta bg-white text-navy hover:-translate-y-0.5 hover:bg-white/90">
+              <Link href="/onboarding/social" className="home-cta bg-white text-navy hover:-translate-y-0.5 hover:bg-white/90">
                 Become an Educator
                 <ArrowRight aria-hidden="true" className="arrow-slide h-4 w-4" />
               </Link>

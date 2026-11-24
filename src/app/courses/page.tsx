@@ -101,7 +101,7 @@ function CoursesScreen() {
               New course
             </Button>
           ) : (
-            <Link href="/onboarding/teacher" className={buttonClass('secondary', 'sm')}>
+            <Link href="/onboarding/social" className={buttonClass('secondary', 'sm')}>
               Teach on iSchoolie
             </Link>
           )

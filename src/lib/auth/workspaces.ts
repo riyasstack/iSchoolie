@@ -137,12 +137,12 @@ export interface RouteInput {
  */
 export function resolvePostAuthRoute(input: RouteInput): RouteDecision {
   if (!input.emailVerified) return { path: '/verify-email', reason: 'verify-email' };
-  if (!input.profile) return { path: '/onboarding', reason: 'onboarding' };
+  if (!input.profile) return { path: '/onboarding/social', reason: 'onboarding' };
   if (input.profile.status === 'suspended') {
     return { path: '/access-denied?reason=suspended', reason: 'suspended' };
   }
   if (!input.profile.onboarding.complete) {
-    return { path: '/onboarding', reason: 'onboarding' };
+    return { path: '/onboarding/social', reason: 'onboarding' };
   }
 
   const roles = effectiveRoles(input.rolesDoc);

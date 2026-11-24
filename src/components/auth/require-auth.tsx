@@ -51,7 +51,7 @@ export function RequireAuth({
       return;
     }
     if (status === 'signed-in' && !profile) {
-      router.replace('/onboarding');
+      router.replace('/onboarding/social');
     }
   }, [status, user, profile, router, pathname, allowUnverified]);
 

@@ -43,7 +43,7 @@ export function PortfolioShowcase() {
               data are never published automatically.
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
-              <Link href="/onboarding/college-student" className="home-cta home-cta-primary group">
+              <Link href="/onboarding/social" className="home-cta home-cta-primary group">
                 Build your profile
                 <ArrowRight aria-hidden="true" className="arrow-slide h-4 w-4" />
               </Link>
