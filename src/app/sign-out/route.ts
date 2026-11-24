@@ -10,9 +10,9 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(request: NextRequest) {
   if (!isWorkosConfigured()) {
-    return NextResponse.redirect(new URL('/', request.url));
+    return NextResponse.redirect(new URL('/sign-in', request.url));
   }
-  await signOut({ returnTo: new URL('/', request.url).toString() });
+  await signOut({ returnTo: new URL('/sign-in', request.url).toString() });
   // `signOut` redirects; this is unreachable but keeps the signature honest.
-  return NextResponse.redirect(new URL('/', request.url));
+  return NextResponse.redirect(new URL('/sign-in', request.url));
 }
