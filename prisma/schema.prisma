@@ -1052,6 +1052,8 @@ model SocialMediaAsset {
   storageKey String
   mimeType   String
   sizeBytes  Int
+  /// Media bytes stored in the database so uploads survive serverless cold starts.
+  data       Bytes?
   altText    String?   @db.VarChar(400)
   createdAt  DateTime  @default(now())
 
