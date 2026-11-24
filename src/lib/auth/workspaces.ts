@@ -152,7 +152,9 @@ export function resolvePostAuthRoute(input: RouteInput): RouteDecision {
     return { path: '/admin', reason: 'admin' };
   }
   if (workspaces.length === 1) {
-    return { path: '/onboarding', reason: 'no-roles' };
+    // Onboarding is already complete and the account data is saved; send the
+    // user straight to the feed instead of back into onboarding.
+    return { path: '/feed', reason: 'no-roles' };
   }
 
   const remembered = input.profile.activeWorkspace

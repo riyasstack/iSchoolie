@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   if (!isWorkosConfigured()) {
     return NextResponse.redirect(new URL('/auth/error', request.url));
   }
-  const next = safeRedirectPath(request.nextUrl.searchParams.get('next'), '/feed');
+  const next = safeRedirectPath(request.nextUrl.searchParams.get('next'), '/auth/redirect');
   try {
     return NextResponse.redirect(await getSignInUrl({ returnTo: next }));
   } catch {

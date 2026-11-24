@@ -21,7 +21,7 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(request: NextRequest) {
   return handleAuth({
-    returnPathname: '/feed',
+    returnPathname: '/auth/redirect',
     onSuccess: async ({ user }) => {
       await provisionAccount(user);
     },
