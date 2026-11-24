@@ -1,7 +1,15 @@
 import type { Metadata, Viewport } from 'next';
+import { Inter } from 'next/font/google';
 import './globals.css';
 import { AppProviders } from '@/components/providers/app-providers';
 import { AppLoading } from '@/components/loading/app-loading';
+
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+  axes: ['opsz'],
+});
 
 export const metadata: Metadata = {
   title: {
@@ -39,7 +47,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="antialiased">
+      <body className={`${inter.variable} antialiased`}>
         <AppProviders>{children}</AppProviders>
         <AppLoading />
       </body>
