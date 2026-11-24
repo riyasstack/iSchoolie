@@ -113,7 +113,6 @@ export type RouteReason =
   | 'onboarding'
   | 'suspended'
   | 'workspace'
-  | 'workspace-selector'
   | 'admin'
   | 'no-roles';
 
@@ -169,7 +168,7 @@ export function resolvePostAuthRoute(input: RouteInput): RouteDecision {
 
   if (input.platformAdmin) return { path: '/admin', reason: 'admin' };
 
-  return { path: '/workspaces', reason: 'workspace-selector' };
+  return { path: '/feed', reason: 'workspace' };
 }
 
 /** Guard for institution-scoped pages. */

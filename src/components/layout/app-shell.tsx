@@ -6,7 +6,6 @@ import { usePathname } from 'next/navigation';
 import {
   BookOpen,
   Building2,
-  ChevronDown,
   GraduationCap,
   LayoutDashboard,
   LogOut,
@@ -74,7 +73,6 @@ export function AppShell({
       icon: <Building2 className="h-4 w-4" />,
       hidden: !workspaces.some((workspace) => workspace.kind === 'institution'),
     },
-    { href: '/workspaces', label: 'Workspaces', icon: <ChevronDown className="h-4 w-4" /> },
     { href: '/courses', label: 'Courses', icon: <BookOpen className="h-4 w-4" /> },
     { href: '/communities', label: 'Communities', icon: <MessagesSquare className="h-4 w-4" /> },
   ];
@@ -182,13 +180,6 @@ export function AppShell({
               </div>
 
               <div className="flex items-center gap-2">
-                <Link
-                  href="/workspaces"
-                  className="hidden items-center gap-1.5 rounded-lg border border-line px-2.5 py-1.5 text-xs font-medium text-subtle transition hover:bg-mutedSurface hover:text-ink sm:flex"
-                >
-                  <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
-                  Switch workspace
-                </Link>
                 <ThemeToggle />
                 <div className="relative">
                   <button

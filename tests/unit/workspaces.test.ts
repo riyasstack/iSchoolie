@@ -107,8 +107,8 @@ describe('resolvePostAuthRoute', () => {
       ...base,
       rolesDoc: rolesDoc(['student_school', 'teacher']),
     });
-    expect(decision.path).toBe('/workspaces');
-    expect(decision.reason).toBe('workspace-selector');
+    expect(decision.path).toBe('/feed');
+    expect(decision.reason).toBe('workspace');
   });
 
   it('honours a remembered workspace that is still authorised', () => {
@@ -128,7 +128,7 @@ describe('resolvePostAuthRoute', () => {
       rolesDoc: rolesDoc(['student_school', 'teacher']),
       memberships: [membership('abc', 'owner', 'revoked')],
     });
-    expect(decision.path).toBe('/workspaces');
+    expect(decision.path).toBe('/feed');
   });
 
   it('keeps a user without roles in onboarding', () => {
